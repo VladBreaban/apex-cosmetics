@@ -115,6 +115,36 @@ export const CreateCheckoutResponse = zod.object({
 
 
 /**
+ * @summary Get available shipping rates for an address
+ */
+export const GetShippingRatesBody = zod.object({
+  "address": zod.object({
+  "name": zod.string(),
+  "address1": zod.string(),
+  "address2": zod.string().optional(),
+  "city": zod.string(),
+  "state": zod.string(),
+  "zip": zod.string(),
+  "country": zod.string()
+}),
+  "itemCount": zod.number(),
+  "totalWeightOz": zod.number().optional()
+})
+
+export const GetShippingRatesResponse = zod.object({
+  "rates": zod.array(zod.object({
+  "serviceCode": zod.string(),
+  "serviceName": zod.string(),
+  "carrierCode": zod.string(),
+  "carrierName": zod.string(),
+  "amountCents": zod.number(),
+  "estimatedDays": zod.number()
+})),
+  "isLive": zod.boolean()
+})
+
+
+/**
  * @summary Get order by ID (for confirmation page)
  */
 export const GetOrderParams = zod.object({

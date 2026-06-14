@@ -154,6 +154,36 @@ export interface UserListResponse {
   total: number;
 }
 
+export interface ShippingAddress {
+  name: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+}
+
+export interface ShippingRatesRequest {
+  address: ShippingAddress;
+  itemCount: number;
+  totalWeightOz?: number;
+}
+
+export interface ShippingRate {
+  serviceCode: string;
+  serviceName: string;
+  carrierCode: string;
+  carrierName: string;
+  amountCents: number;
+  estimatedDays: number;
+}
+
+export interface ShippingRatesResponse {
+  rates: ShippingRate[];
+  isLive: boolean;
+}
+
 export interface AdminStats {
   totalOrders: number;
   totalRevenue: number;

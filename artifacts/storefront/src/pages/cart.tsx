@@ -1,34 +1,12 @@
 import { useCart } from "@/lib/cart-context";
-import { useCreateCheckout } from "@workspace/api-client-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { getProductImage } from "@/lib/image-map";
 import { Minus, Plus, X, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Cart() {
   const { items, updateQuantity, removeItem, subtotal, itemCount } = useCart();
-  const createCheckout = useCreateCheckout();
-
-  const handleCheckout = () => {
-    if (items.length === 0) return;
-
-    const currentUrl = window.location.origin;
-    
-    createCheckout.mutate(
-      {
-        data: {
-          items: items.map(i => ({ priceId: i.priceId, quantity: i.quantity })),
-          successUrl: `${currentUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancelUrl: `${currentUrl}/checkout/cancel`,
-        }
-      },
-      {
-        onSuccess: (data) => {
-          window.location.href = data.url;
-        }
-      }
-    );
-  };
+  const [, navigate] = useLocation();
 
   if (items.length === 0) {
     return (
@@ -144,13 +122,12 @@ export default function Cart() {
 
               <button 
                 className="w-full relative group overflow-hidden bg-foreground text-background py-5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                onClick={handleCheckout}
-                disabled={createCheckout.isPending}
+                onClick={() => navigate("/checkout")}
               >
                 <div className="absolute inset-0 bg-primary translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-[0.16,1,0.3,1]" />
                 <span className="relative z-10 text-sm font-semibold uppercase tracking-widest group-hover:text-white transition-colors duration-500 flex items-center">
-                  {createCheckout.isPending ? "Processing..." : "Initiate Checkout"}
-                  {!createCheckout.isPending && <ArrowRight className="w-4 h-4 ml-2" />}
+                  Proceed to Checkout
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </span>
               </button>
               

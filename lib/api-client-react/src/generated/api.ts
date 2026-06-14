@@ -42,6 +42,8 @@ import type {
   ProductInput,
   ProductListResponse,
   ProductUpdate,
+  ShippingRatesRequest,
+  ShippingRatesResponse,
   User,
   UserListResponse
 } from './api.schemas';
@@ -442,6 +444,77 @@ export const useCreateCheckout = <TError = ErrorType<ErrorResponse>,
         TContext
       > => {
       return useMutation(getCreateCheckoutMutationOptions(options));
+    }
+
+export const getGetShippingRatesUrl = () => {
+
+
+
+
+  return `/api/shipping/rates`
+}
+
+/**
+ * @summary Get available shipping rates for an address
+ */
+export const getShippingRates = async (shippingRatesRequest: ShippingRatesRequest, options?: RequestInit): Promise<ShippingRatesResponse> => {
+
+  return customFetch<ShippingRatesResponse>(getGetShippingRatesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      shippingRatesRequest,)
+  }
+);}
+
+
+
+
+export const getGetShippingRatesMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getShippingRates>>, TError,{data: BodyType<ShippingRatesRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof getShippingRates>>, TError,{data: BodyType<ShippingRatesRequest>}, TContext> => {
+
+const mutationKey = ['getShippingRates'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof getShippingRates>>, {data: BodyType<ShippingRatesRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  getShippingRates(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GetShippingRatesMutationResult = NonNullable<Awaited<ReturnType<typeof getShippingRates>>>
+    export type GetShippingRatesMutationBody = BodyType<ShippingRatesRequest>
+    export type GetShippingRatesMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Get available shipping rates for an address
+ */
+export const useGetShippingRates = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof getShippingRates>>, TError,{data: BodyType<ShippingRatesRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof getShippingRates>>,
+        TError,
+        {data: BodyType<ShippingRatesRequest>},
+        TContext
+      > => {
+      return useMutation(getGetShippingRatesMutationOptions(options));
     }
 
 export const getGetOrderUrl = (id: string,) => {

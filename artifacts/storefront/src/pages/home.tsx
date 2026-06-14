@@ -84,7 +84,7 @@ export default function Home() {
                 <img 
                   src={getProductImage("Facial Serum")} 
                   alt="Apex Health Facial Serum" 
-                  className="w-full h-full object-cover scale-110 object-center mix-blend-multiply dark:mix-blend-screen opacity-90" 
+                  className="w-full h-full object-contain p-6" 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
               </div>
