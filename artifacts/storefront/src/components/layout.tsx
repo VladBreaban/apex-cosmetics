@@ -24,10 +24,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-background">
       <header 
-        className={`fixed top-0 inset-x-0 z-50 w-full transition-all duration-700 ease-out ${
-          scrolled ? "bg-background/80 backdrop-blur-2xl border-b border-white/5 py-4" : "bg-transparent py-6"
+        className={`fixed top-0 inset-x-0 z-50 w-full transition-all duration-700 ease-[0.16,1,0.3,1] ${
+          scrolled ? "bg-white/70 backdrop-blur-2xl border-b border-white/50 py-4 shadow-[0_4px_30px_rgba(0,0,0,0.03)]" : "bg-transparent py-8"
         }`}
       >
         <div className="container mx-auto px-6 lg:px-12 flex items-center justify-between">
@@ -37,20 +37,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
               onClick={() => setIsMobileMenuOpen(true)}
               data-testid="button-mobile-menu"
             >
-              <Menu className="w-5 h-5" strokeWidth={1} />
+              <Menu className="w-5 h-5" strokeWidth={1.5} />
             </button>
             <Link href="/" className="flex items-center gap-3 group">
-              <Hexagon className="w-5 h-5 text-primary group-hover:rotate-90 transition-transform duration-700 ease-in-out" strokeWidth={1} />
-              <span className="font-display font-medium text-2xl tracking-[0.2em] uppercase">Apex</span>
+              <Hexagon className="w-5 h-5 text-primary group-hover:rotate-90 transition-transform duration-1000 ease-[0.16,1,0.3,1]" strokeWidth={1.5} />
+              <span className="font-display font-medium text-2xl tracking-[0.25em] uppercase">Apex</span>
             </Link>
           </div>
 
-          <nav className="hidden md:flex items-center gap-12">
+          <nav className="hidden md:flex items-center gap-14">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-[11px] font-medium tracking-[0.3em] uppercase transition-all duration-500 relative py-2 ${
+                className={`text-[10px] font-semibold tracking-[0.3em] uppercase transition-all duration-500 relative py-2 ${
                   location === link.href ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -58,7 +58,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 {location === link.href && (
                   <motion.div 
                     layoutId="nav-indicator"
-                    className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-primary" 
+                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary" 
                     initial={false}
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
@@ -69,12 +69,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-4">
             <Link href="/cart" className="relative p-2 text-foreground/80 hover:text-primary transition-colors group" data-testid="link-cart">
-              <ShoppingBag className="w-5 h-5 transition-transform duration-500 group-hover:-translate-y-1" strokeWidth={1} />
+              <ShoppingBag className="w-5 h-5 transition-transform duration-500 group-hover:-translate-y-1" strokeWidth={1.5} />
               <AnimatePresence>
                 {itemCount > 0 && (
                   <motion.span 
                     initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
-                    className="absolute top-0 right-0 w-4 h-4 bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center rounded-full shadow-[0_0_10px_rgba(200,122,91,0.5)]"
+                    className="absolute top-0 right-0 w-4 h-4 bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center rounded-full shadow-[0_0_15px_rgba(200,122,91,0.6)]"
                   >
                     {itemCount}
                   </motion.span>
@@ -91,20 +91,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-3xl md:hidden"
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-[100] bg-white/95 backdrop-blur-3xl md:hidden"
           >
-            <div className="flex items-center justify-between p-6 border-b border-white/5">
+            <div className="flex items-center justify-between p-6 border-b border-border/50">
               <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3">
-                <Hexagon className="w-5 h-5 text-primary" strokeWidth={1} />
-                <span className="font-display font-medium text-2xl tracking-[0.2em] uppercase">Apex</span>
+                <Hexagon className="w-5 h-5 text-primary" strokeWidth={1.5} />
+                <span className="font-display font-medium text-2xl tracking-[0.25em] uppercase">Apex</span>
               </Link>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="p-2 text-muted-foreground hover:text-foreground"
                 data-testid="button-close-menu"
               >
-                <X className="w-6 h-6" strokeWidth={1} />
+                <X className="w-6 h-6" strokeWidth={1.5} />
               </button>
             </div>
             <nav className="flex flex-col p-8 pt-12">
@@ -114,7 +114,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   animate={{ opacity: 1, y: 0 }} 
                   transition={{ delay: i * 0.1 + 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                   key={link.href}
-                  className="border-b border-white/5 last:border-0"
+                  className="border-b border-border/30 last:border-0"
                 >
                   <Link
                     href={link.href}
@@ -136,13 +136,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      <footer className="bg-secondary/30 border-t border-border pt-32 pb-12 relative z-10">
-        <div className="container mx-auto px-6 lg:px-12">
+      <footer className="bg-secondary/40 border-t border-border pt-32 pb-12 relative z-10 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-60" />
+        <div className="container mx-auto px-6 lg:px-12 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-8 mb-24">
             <div className="md:col-span-5 space-y-8">
-              <div className="flex items-center gap-3">
-                <Hexagon className="w-6 h-6 text-primary" strokeWidth={1} />
-                <span className="font-display font-medium text-2xl tracking-[0.2em] uppercase">Apex</span>
+              <div className="flex items-center gap-3 group">
+                <Hexagon className="w-6 h-6 text-primary group-hover:rotate-180 transition-transform duration-1000 ease-[0.16,1,0.3,1]" strokeWidth={1.5} />
+                <span className="font-display font-medium text-2xl tracking-[0.25em] uppercase">Apex</span>
               </div>
               <p className="text-muted-foreground max-w-sm font-light leading-relaxed text-sm">
                 Clinical-grade GHK-Cu copper peptide formulations. Engineered at the intersection of longevity biotech and luxury wellness.

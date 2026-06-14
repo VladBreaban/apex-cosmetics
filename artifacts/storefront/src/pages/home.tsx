@@ -3,50 +3,76 @@ import { Link } from "wouter";
 import { getProductImage } from "@/lib/image-map";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Sparkles, Activity, Droplets } from "lucide-react";
+import { ArrowRight, Activity, Droplets, ChevronRight } from "lucide-react";
 import { useRef } from "react";
 
 export default function Home() {
   const { data: featured, isLoading } = useListFeaturedProducts();
   const heroRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
+  const scienceRef = useRef<HTMLElement>(null);
+  
+  const { scrollYProgress: heroScroll } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"]
   });
   
-  const y1 = useTransform(scrollYProgress, [0, 1], [0, 200]);
-  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+  const { scrollYProgress: scienceScroll } = useScroll({
+    target: scienceRef,
+    offset: ["start end", "end start"]
+  });
+
+  const heroY = useTransform(heroScroll, [0, 1], [0, 150]);
+  const heroOpacity = useTransform(heroScroll, [0, 0.8], [1, 0]);
+  const heroScale = useTransform(heroScroll, [0, 1], [1, 0.95]);
+
+  const scienceParallaxY = useTransform(scienceScroll, [0, 1], [100, -100]);
 
   return (
     <div className="flex flex-col w-full">
       {/* Hero Section */}
       <section ref={heroRef} className="relative min-h-[100dvh] flex items-center overflow-hidden bg-background pt-20">
-        <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-60" />
+        <div className="absolute inset-0 mesh-gradient opacity-80" />
         
-        {/* Abstract animated background elements */}
-        <div className="absolute top-1/4 right-0 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 mix-blend-multiply dark:mix-blend-screen" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 mix-blend-multiply dark:mix-blend-screen" />
+        {/* Animated abstract blobs for "splash" energy */}
+        <motion.div 
+          animate={{ 
+            rotate: 360,
+            scale: [1, 1.1, 1],
+            x: [0, 30, 0]
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute top-1/4 right-0 w-[800px] h-[800px] bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 mix-blend-multiply" 
+        />
+        <motion.div 
+          animate={{ 
+            rotate: -360,
+            scale: [1, 1.2, 1],
+            y: [0, -40, 0]
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-0 left-1/4 w-[600px] h-[600px] bg-blue-300/10 rounded-full blur-3xl translate-y-1/3 mix-blend-multiply" 
+        />
 
         <div className="container mx-auto px-6 lg:px-12 relative z-10 h-full flex flex-col justify-center">
           <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center h-full">
             <motion.div 
-              style={{ y: y1, opacity }}
+              style={{ y: heroY, opacity: heroOpacity }}
               className="max-w-2xl pt-12 lg:pt-0"
             >
               <motion.div 
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="inline-flex items-center gap-3 mb-8"
+                initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                className="inline-flex items-center gap-4 mb-10"
               >
-                <span className="h-px w-8 bg-primary block" />
-                <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Clinical Grade Biotech</span>
+                <span className="h-px w-12 bg-primary block" />
+                <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Clinical Grade Biotech</span>
               </motion.div>
               
               <motion.h1 
                 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="text-6xl md:text-7xl lg:text-[5.5rem] font-display font-light leading-[1.05] tracking-tight mb-8"
+                className="text-6xl md:text-7xl lg:text-[6rem] font-display font-light leading-[1.05] tracking-tight mb-8"
               >
                 The future of <br/>
-                <span className="font-medium italic text-primary">longevity</span> <br/>
+                <span className="font-medium italic text-copper-gradient pr-2">longevity</span> <br/>
                 is here.
               </motion.h1>
               
@@ -61,14 +87,14 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 className="flex flex-col sm:flex-row gap-6"
               >
-                <Link href="/products" className="group relative inline-flex items-center justify-center px-8 py-4 bg-foreground text-background overflow-hidden">
+                <Link href="/products" className="group relative inline-flex items-center justify-center px-8 py-5 bg-foreground text-background overflow-hidden rounded-sm shadow-xl shadow-primary/10 hover:shadow-primary/20 transition-shadow">
                   <div className="absolute inset-0 bg-primary translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-[0.16,1,0.3,1]" />
-                  <span className="relative z-10 text-sm font-semibold uppercase tracking-widest group-hover:text-white transition-colors duration-500">
+                  <span className="relative z-10 text-sm font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-500">
                     Explore Collection
                   </span>
                 </Link>
-                <Link href="#science" className="group inline-flex items-center justify-center px-8 py-4 bg-transparent border border-border text-foreground hover:border-foreground transition-colors duration-500">
-                  <span className="text-sm font-semibold uppercase tracking-widest">
+                <Link href="#science" className="group inline-flex items-center justify-center px-8 py-5 bg-transparent border border-border text-foreground hover:border-primary/50 hover:bg-white/50 backdrop-blur-sm rounded-sm transition-all duration-500">
+                  <span className="text-sm font-bold uppercase tracking-widest group-hover:text-primary transition-colors">
                     The Science
                   </span>
                 </Link>
@@ -76,45 +102,64 @@ export default function Home() {
             </motion.div>
 
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="relative hidden lg:block h-[800px]"
+              style={{ scale: heroScale }}
+              initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="relative hidden lg:block h-[800px] w-full"
             >
-              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary/10 to-transparent blur-2xl" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[650px] overflow-hidden rounded-[2rem] border border-border/50 bg-white/5 backdrop-blur-sm shadow-2xl">
+              {/* Layered visual composition */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/40 via-transparent to-transparent blur-xl" />
+              
+              <motion.div 
+                animate={{ y: [0, -15, 0] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-[10%] right-[10%] w-[450px] h-[600px] glass-card rounded-2xl overflow-hidden shadow-2xl z-20"
+              >
+                <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-transparent pointer-events-none" />
                 <img 
                   src={getProductImage("Facial Serum")} 
                   alt="Apex Health Facial Serum" 
-                  className="w-full h-full object-contain p-6" 
+                  className="w-full h-full object-contain p-8 mix-blend-multiply" 
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
-              </div>
+              </motion.div>
+              
+              <motion.div 
+                animate={{ y: [0, 20, 0] }}
+                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                className="absolute bottom-[5%] left-[5%] w-[350px] h-[450px] bg-white/60 backdrop-blur-md rounded-2xl border border-white/80 shadow-xl overflow-hidden z-10"
+              >
+                <img 
+                  src={getProductImage("Cleanser")} 
+                  alt="Apex Health Cleanser" 
+                  className="w-full h-full object-contain p-8 mix-blend-multiply opacity-90" 
+                />
+              </motion.div>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Featured Products */}
-      <section className="py-32 bg-secondary/30 relative">
+      {/* Featured Products - Editorial Style */}
+      <section className="py-32 bg-secondary/20 relative z-20">
         <div className="container mx-auto px-6 lg:px-12">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
             <div className="max-w-2xl">
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-4 block">Curated</span>
-              <h2 className="text-4xl md:text-5xl font-display font-medium tracking-tight mb-6">Core Protocols</h2>
+              <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-4 block">Curated</span>
+              <h2 className="text-5xl md:text-6xl font-display font-medium tracking-tight mb-6">Core Protocols</h2>
               <p className="text-muted-foreground font-light text-lg">
                 Our signature Copper Peptide lineup. Engineered to restore, protect, and enhance your natural biology.
               </p>
             </div>
-            <Link href="/products" className="group inline-flex items-center text-sm font-semibold uppercase tracking-widest text-foreground hover:text-primary transition-colors">
-              View All 
-              <ArrowRight className="ml-2 w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+            <Link href="/products" className="group inline-flex items-center text-xs font-bold uppercase tracking-[0.2em] text-foreground hover:text-primary transition-colors pb-2 border-b border-foreground hover:border-primary">
+              View All Formulations
+              <ArrowRight className="ml-3 w-4 h-4 transform group-hover:translate-x-2 transition-transform" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-14">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-20 lg:gap-y-32">
             {isLoading ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="space-y-6">
-                  <Skeleton className="w-full aspect-[3/4] rounded-none" />
+                  <Skeleton className="w-full aspect-[3/4] rounded-sm" />
                   <div className="space-y-3">
                     <Skeleton className="h-6 w-3/4" />
                     <Skeleton className="h-4 w-1/4" />
@@ -128,29 +173,36 @@ export default function Home() {
                   initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-100px" }}
-                  transition={{ duration: 0.8, delay: idx * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                  className="group relative"
+                  transition={{ duration: 0.8, delay: (idx % 3) * 0.15, ease: [0.16, 1, 0.3, 1] }}
+                  className={`group relative ${idx % 2 === 1 ? 'lg:mt-24' : ''}`}
                 >
-                  <Link href={`/products/${product.id}`} className="block relative bg-white dark:bg-black/20 overflow-hidden aspect-[3/4] mb-6 shadow-sm border border-border/50 group-hover:border-primary/30 transition-colors duration-500">
-                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10 pointer-events-none" />
+                  <Link href={`/products/${product.id}`} className="block relative bg-white overflow-hidden aspect-[3/4] mb-8 shadow-sm border border-border/60 rounded-sm group-hover:shadow-xl transition-all duration-700">
+                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-10 pointer-events-none" />
                     <img 
                       src={getProductImage(product.name)} 
                       alt={product.name} 
-                      className="w-full h-full object-contain p-10 transform group-hover:scale-105 transition-transform duration-700 ease-[0.16,1,0.3,1] relative" 
+                      className="w-full h-full object-contain p-12 transform group-hover:scale-110 transition-transform duration-1000 ease-[0.16,1,0.3,1] relative mix-blend-multiply" 
                     />
+                    
+                    {/* Hover Overlay Detail */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-20 flex justify-end">
+                      <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-100">
+                        <ChevronRight className="w-5 h-5 text-primary" />
+                      </div>
+                    </div>
                   </Link>
-                  <div className="flex flex-col">
+                  <div className="flex flex-col px-2">
                     {product.category && (
-                      <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground mb-3">
                         {product.category}
                       </span>
                     )}
                     <Link href={`/products/${product.id}`} className="block mb-2">
-                      <h3 className="text-xl font-display font-medium tracking-wide group-hover:text-primary transition-colors">
+                      <h3 className="text-2xl font-display font-medium tracking-wide group-hover:text-primary transition-colors">
                         {product.name}
                       </h3>
                     </Link>
-                    <span className="font-sans text-sm text-muted-foreground">
+                    <span className="font-sans text-sm text-muted-foreground tracking-wide">
                       {product.prices?.[0] ? `$${(product.prices[0].unitAmount / 100).toFixed(2)}` : 'N/A'}
                     </span>
                   </div>
@@ -161,30 +213,62 @@ export default function Home() {
         </div>
       </section>
 
-      {/* The Science section */}
-      <section id="science" className="py-32 bg-background relative overflow-hidden border-t border-border">
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-secondary/10 -skew-x-12 translate-x-20 z-0" />
+      {/* The Science section - Redesigned for splash/dynamic energy */}
+      <section id="science" ref={scienceRef} className="py-40 bg-white relative overflow-hidden">
+        <div className="absolute inset-0 mesh-gradient opacity-60" />
         
         <div className="container mx-auto px-6 lg:px-12 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-20 items-center">
+          <div className="grid lg:grid-cols-12 gap-20 items-center">
             <motion.div 
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1 }}
-              className="relative aspect-square max-w-md mx-auto lg:mx-0 w-full"
+              style={{ y: scienceParallaxY }}
+              className="lg:col-span-6 relative"
             >
-              <div className="absolute inset-0 bg-primary/5 rounded-full animate-pulse-slow" />
-              <div className="absolute inset-8 bg-blue-400/10 rounded-full blur-xl" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Sparkles className="w-32 h-32 text-primary opacity-80" strokeWidth={1} />
+              {/* Dynamic layered imagery instead of flat icon */}
+              <div className="relative aspect-[4/5] w-full max-w-md mx-auto lg:mx-0">
+                <div className="absolute inset-0 bg-primary/5 rounded-2xl border border-primary/10 shadow-2xl backdrop-blur-xl overflow-hidden">
+                  <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618090584126-129cd1f3f4c6?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center mix-blend-overlay opacity-30 grayscale" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent" />
+                </div>
+                
+                <motion.div 
+                  animate={{ y: [-10, 10, -10] }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute top-1/4 -right-12 w-64 h-64 glass-card rounded-full flex items-center justify-center z-20 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border-white/80"
+                >
+                  <div className="text-center">
+                    <span className="block text-4xl font-display font-medium text-primary mb-1">GHK-Cu</span>
+                    <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Tripeptide</span>
+                  </div>
+                </motion.div>
+                
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1, delay: 0.3 }}
+                  className="absolute bottom-12 -left-8 bg-white p-6 shadow-xl rounded-xl border border-border/50 z-30 flex items-center gap-5"
+                >
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                    <Activity className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-display font-medium mb-1">200<span className="text-sm font-sans text-muted-foreground ml-1">ng/mL</span></div>
+                    <div className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground font-semibold">Optimal Baseline</div>
+                  </div>
+                </motion.div>
               </div>
             </motion.div>
             
-            <div>
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-6 block">The Innovation</span>
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-light tracking-tight mb-10 leading-[1.1]">
-                The molecule of <br/><span className="font-medium italic">regeneration.</span>
+            <motion.div 
+              initial={{ opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+              className="lg:col-span-6 lg:pl-10"
+            >
+              <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-6 block">The Innovation</span>
+              <h2 className="text-5xl md:text-6xl lg:text-7xl font-display font-light tracking-tight mb-10 leading-[1.05]">
+                The molecule of <br/><span className="font-medium italic text-copper-gradient">regeneration.</span>
               </h2>
               
               <div className="space-y-8 font-light text-muted-foreground leading-relaxed text-lg mb-12">
@@ -196,19 +280,23 @@ export default function Home() {
                 </p>
               </div>
               
-              <div className="grid grid-cols-2 gap-8 border-t border-border pt-10">
-                <div>
-                  <Activity className="w-6 h-6 text-primary mb-4" strokeWidth={1.5} />
-                  <h4 className="font-sans font-semibold text-sm uppercase tracking-wider mb-2">Cellular Repair</h4>
+              <div className="grid grid-cols-2 gap-10 border-t border-border/60 pt-10">
+                <div className="group">
+                  <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center mb-5 group-hover:bg-primary/10 transition-colors">
+                    <Activity className="w-5 h-5 text-primary" strokeWidth={1.5} />
+                  </div>
+                  <h4 className="font-sans font-bold text-xs uppercase tracking-widest mb-3">Cellular Repair</h4>
                   <p className="text-sm font-light text-muted-foreground">Stimulates blood vessel and nerve outgrowth</p>
                 </div>
-                <div>
-                  <Droplets className="w-6 h-6 text-primary mb-4" strokeWidth={1.5} />
-                  <h4 className="font-sans font-semibold text-sm uppercase tracking-wider mb-2">Deep Hydration</h4>
+                <div className="group">
+                  <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center mb-5 group-hover:bg-primary/10 transition-colors">
+                    <Droplets className="w-5 h-5 text-primary" strokeWidth={1.5} />
+                  </div>
+                  <h4 className="font-sans font-bold text-xs uppercase tracking-widest mb-3">Deep Hydration</h4>
                   <p className="text-sm font-light text-muted-foreground">Increases natural moisturizing factors</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
