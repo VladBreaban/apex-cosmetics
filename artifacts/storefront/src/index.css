@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -49,59 +49,36 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-:root {
-  --background: 220 20% 98%;
-  --foreground: 220 40% 10%;
-  --border: 220 15% 90%;
-  --card: 0 0% 100%;
-  --card-foreground: 220 40% 10%;
-  --card-border: 220 15% 92%;
+:root, .dark {
+  /* Rich deep midnight teal/navy background */
+  --background: 210 50% 4%;
+  --foreground: 30 20% 96%;
+  --border: 210 30% 12%;
   
-  --primary: 225 85% 45%;
-  --primary-foreground: 0 0% 100%;
+  --card: 210 50% 6%;
+  --card-foreground: 30 20% 96%;
+  --card-border: 210 30% 12%;
   
-  --secondary: 25 30% 85%;
-  --secondary-foreground: 220 40% 10%;
+  /* Copper/bronze for primary */
+  --primary: 20 50% 60%;
+  --primary-foreground: 0 0% 10%;
   
-  --muted: 220 15% 94%;
-  --muted-foreground: 220 20% 40%;
+  /* Lighter copper accent */
+  --secondary: 25 40% 70%;
+  --secondary-foreground: 210 50% 4%;
   
-  --accent: 225 85% 96%;
-  --accent-foreground: 225 85% 40%;
+  --muted: 210 40% 12%;
+  --muted-foreground: 210 10% 65%;
   
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 100%;
-  
-  --input: 220 15% 90%;
-  --ring: 225 85% 45%;
-  --radius: 0.5rem;
-}
-
-.dark {
-  --background: 220 40% 5%;
-  --foreground: 220 20% 98%;
-  --border: 220 25% 15%;
-  --card: 220 40% 7%;
-  --card-foreground: 220 20% 98%;
-  --card-border: 220 25% 15%;
-  
-  --primary: 225 85% 65%;
-  --primary-foreground: 0 0% 100%;
-  
-  --secondary: 25 20% 20%;
-  --secondary-foreground: 220 20% 98%;
-  
-  --muted: 220 25% 15%;
-  --muted-foreground: 220 15% 65%;
-  
-  --accent: 225 85% 15%;
-  --accent-foreground: 225 85% 65%;
+  --accent: 210 50% 10%;
+  --accent-foreground: 20 50% 60%;
   
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   
-  --input: 220 25% 15%;
-  --ring: 225 85% 65%;
+  --input: 210 30% 15%;
+  --ring: 20 50% 60%;
+  --radius: 0;
 }
 
 @layer base {
@@ -110,7 +87,9 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground selection:bg-primary/20 selection:text-primary;
+    @apply font-sans antialiased bg-background text-foreground selection:bg-primary/30 selection:text-primary-foreground;
+    /* subtle noise overlay */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -118,10 +97,9 @@
   }
 }
 
-.glass-panel {
-  @apply bg-white/70 dark:bg-black/50 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)];
-}
-
-.text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400;
+.text-copper-gradient {
+  background: linear-gradient(135deg, hsl(20, 60%, 75%), hsl(15, 50%, 55%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
