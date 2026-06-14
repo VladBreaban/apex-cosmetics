@@ -74,7 +74,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 {itemCount > 0 && (
                   <motion.span 
                     initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
-                    className="absolute top-0 right-0 w-4 h-4 bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center rounded-full shadow-[0_0_15px_rgba(200,122,91,0.6)]"
+                    className="absolute top-0 right-0 w-4 h-4 bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center rounded-full shadow-[0_0_15px_rgba(37,99,235,0.6)]"
                   >
                     {itemCount}
                   </motion.span>

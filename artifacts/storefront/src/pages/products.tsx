@@ -56,7 +56,7 @@ export default function Products() {
                         {isActive && (
                           <motion.div 
                             layoutId="category-indicator"
-                            className="absolute -left-6 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary hidden lg:block shadow-[0_0_8px_rgba(200,122,91,0.6)]"
+                            className="absolute -left-6 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary hidden lg:block shadow-[0_0_8px_rgba(37,99,235,0.6)]"
                             initial={false}
                           />
                         )}
@@ -109,7 +109,7 @@ export default function Products() {
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, y: -30 }}
                       transition={{ duration: 0.7, delay: (idx % 6) * 0.1, ease: [0.16, 1, 0.3, 1] }}
-                      className={`group flex flex-col ${idx % 2 === 1 ? 'sm:mt-16 xl:mt-0' : ''} ${idx % 3 === 1 ? 'xl:mt-16' : ''} ${idx % 3 === 2 ? 'xl:mt-32' : ''}`}
+                      className="group flex flex-col"
                     >
                       <Link href={`/products/${product.id}`} className="block relative bg-white overflow-hidden aspect-[3/4] mb-8 shadow-sm border border-border/60 rounded-sm group-hover:shadow-xl transition-all duration-700">
                         {product.featured && (

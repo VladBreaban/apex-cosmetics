@@ -59,9 +59,9 @@
   --card-foreground: 215 30% 13%;
   --card-border: 220 16% 92%;
 
-  /* Refined copper — on-brand for copper peptides */
-  --primary: 18 62% 44%;
-  --primary-foreground: 40 33% 99%;
+  /* Brand blue — matches the product packaging */
+  --primary: 221 78% 47%;
+  --primary-foreground: 210 40% 99%;
 
   /* Cool clinical light gray */
   --secondary: 215 25% 94%;
@@ -70,15 +70,15 @@
   --muted: 220 18% 95%;
   --muted-foreground: 220 9% 46%;
 
-  /* Faint copper tint for soft surfaces */
-  --accent: 24 55% 95%;
-  --accent-foreground: 18 62% 38%;
+  /* Faint blue tint for soft surfaces */
+  --accent: 218 70% 95%;
+  --accent-foreground: 221 78% 42%;
 
   --destructive: 0 72% 50%;
   --destructive-foreground: 0 0% 100%;
 
   --input: 220 16% 88%;
-  --ring: 18 62% 44%;
+  --ring: 221 78% 47%;
   --radius: 0;
 }
 
@@ -99,7 +99,7 @@
 }
 
 .text-copper-gradient {
-  background: linear-gradient(135deg, hsl(24, 74%, 45%), hsl(14, 68%, 38%));
+  background: linear-gradient(135deg, hsl(221, 80%, 52%), hsl(225, 72%, 40%));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
