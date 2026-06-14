@@ -6,3 +6,9 @@ id = "Azh9pBXs0hvDlQJBW8hZ8"
 uri = "file://attached_assets/generated_images/water_header_bg.png"
 type = "image"
 title = "water header background"
+
+[[generated]]
+id = "8CMKe72C9SE9Mc9lOKSj3"
+uri = "file://attached_assets/generated_images/science_water_photo.png"
+type = "image"
+title = "science water product photo"

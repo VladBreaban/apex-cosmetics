@@ -5,6 +5,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, Activity, Droplets, ChevronRight } from "lucide-react";
 import { useRef } from "react";
+import scienceWaterPhoto from "@assets/generated_images/science_water_photo.png";
 
 export default function Home() {
   const { data: featured, isLoading } = useListFeaturedProducts();
@@ -225,9 +226,13 @@ export default function Home() {
             >
               {/* Dynamic layered imagery instead of flat icon */}
               <div className="relative aspect-[4/5] w-full max-w-md mx-auto lg:mx-0">
-                <div className="absolute inset-0 bg-primary/5 rounded-2xl border border-primary/10 shadow-2xl backdrop-blur-xl overflow-hidden">
-                  <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618090584126-129cd1f3f4c6?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center mix-blend-overlay opacity-30 grayscale" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent" />
+                <div className="absolute inset-0 rounded-2xl border border-primary/10 shadow-2xl overflow-hidden bg-white">
+                  <img
+                    src={scienceWaterPhoto}
+                    alt="Copper Peptide serum bottle in a dynamic water splash"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/40 via-transparent to-transparent" />
                 </div>
                 
                 <motion.div 
