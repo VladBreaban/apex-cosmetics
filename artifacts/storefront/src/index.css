@@ -49,35 +49,36 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-:root, .dark {
-  /* Rich deep midnight teal/navy background */
-  --background: 210 50% 4%;
-  --foreground: 30 20% 96%;
-  --border: 210 30% 12%;
-  
-  --card: 210 50% 6%;
-  --card-foreground: 30 20% 96%;
-  --card-border: 210 30% 12%;
-  
-  /* Copper/bronze for primary */
-  --primary: 20 50% 60%;
-  --primary-foreground: 0 0% 10%;
-  
-  /* Lighter copper accent */
-  --secondary: 25 40% 70%;
-  --secondary-foreground: 210 50% 4%;
-  
-  --muted: 210 40% 12%;
-  --muted-foreground: 210 10% 65%;
-  
-  --accent: 210 50% 10%;
-  --accent-foreground: 20 50% 60%;
-  
-  --destructive: 0 84% 60%;
+:root {
+  /* Clean, modern clinical light canvas */
+  --background: 40 33% 99%;
+  --foreground: 215 30% 13%;
+  --border: 220 16% 90%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 215 30% 13%;
+  --card-border: 220 16% 92%;
+
+  /* Refined copper — on-brand for copper peptides */
+  --primary: 18 62% 44%;
+  --primary-foreground: 40 33% 99%;
+
+  /* Cool clinical light gray */
+  --secondary: 215 25% 94%;
+  --secondary-foreground: 215 30% 16%;
+
+  --muted: 220 18% 95%;
+  --muted-foreground: 220 9% 46%;
+
+  /* Faint copper tint for soft surfaces */
+  --accent: 24 55% 95%;
+  --accent-foreground: 18 62% 38%;
+
+  --destructive: 0 72% 50%;
   --destructive-foreground: 0 0% 100%;
-  
-  --input: 210 30% 15%;
-  --ring: 20 50% 60%;
+
+  --input: 220 16% 88%;
+  --ring: 18 62% 44%;
   --radius: 0;
 }
 
@@ -87,7 +88,7 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground selection:bg-primary/30 selection:text-primary-foreground;
+    @apply font-sans antialiased bg-background text-foreground selection:bg-primary/20 selection:text-foreground;
     /* subtle noise overlay */
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
   }
@@ -98,7 +99,7 @@
 }
 
 .text-copper-gradient {
-  background: linear-gradient(135deg, hsl(20, 60%, 75%), hsl(15, 50%, 55%));
+  background: linear-gradient(135deg, hsl(24, 72%, 50%), hsl(14, 66%, 40%));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
