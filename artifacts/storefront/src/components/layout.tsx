@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { useCart } from "@/lib/cart-context";
 import { ShoppingBag, Menu, X, Hexagon } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 export function Layout({ children }: { children: React.ReactNode }) {
   const { itemCount } = useCart();
   const [location] = useLocation();
+  const searchString = useSearch();
+  const activeCategory = new URLSearchParams(searchString).get("category");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -17,70 +19,81 @@ export function Layout({ children }: { children: React.ReactNode }) {
   }, []);
 
   const navLinks = [
-    { href: "/products", label: "Collection" },
-    { href: "/products?category=facial", label: "Face" },
-    { href: "/products?category=body", label: "Body" },
-    { href: "/products?category=hair", label: "Hair" },
+    { href: "/products", label: "Collection", category: null },
+    { href: "/products?category=facial", label: "Face", category: "facial" },
+    { href: "/products?category=body", label: "Body", category: "body" },
+    { href: "/products?category=hair", label: "Hair", category: "hair" },
   ];
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-background">
       <header 
         className={`fixed top-0 inset-x-0 z-50 w-full transition-all duration-700 ease-[0.16,1,0.3,1] ${
-          scrolled ? "bg-white/70 backdrop-blur-2xl border-b border-white/50 py-4 shadow-[0_4px_30px_rgba(0,0,0,0.03)]" : "bg-transparent py-8"
+          scrolled ? "py-3" : "py-5"
         }`}
       >
-        <div className="container mx-auto px-6 lg:px-12 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              className="md:hidden p-2 -ml-2 text-foreground/80 hover:text-primary transition-colors"
-              onClick={() => setIsMobileMenuOpen(true)}
-              data-testid="button-mobile-menu"
-            >
-              <Menu className="w-5 h-5" strokeWidth={1.5} />
-            </button>
-            <Link href="/" className="flex items-center gap-3 group">
-              <Hexagon className="w-5 h-5 text-primary group-hover:rotate-90 transition-transform duration-1000 ease-[0.16,1,0.3,1]" strokeWidth={1.5} />
-              <span className="font-display font-medium text-2xl tracking-[0.25em] uppercase">Apex</span>
-            </Link>
-          </div>
-
-          <nav className="hidden md:flex items-center gap-14">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`text-[10px] font-semibold tracking-[0.3em] uppercase transition-all duration-500 relative py-2 ${
-                  location === link.href ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                }`}
+        <div className="container mx-auto px-4 lg:px-12">
+          <div className={`flex items-center justify-between gap-6 rounded-full transition-all duration-700 ease-[0.16,1,0.3,1] ${
+            scrolled
+              ? "bg-white/80 backdrop-blur-2xl border border-white/70 shadow-[0_10px_40px_rgba(15,23,42,0.08)] pl-6 pr-3 py-2.5"
+              : "bg-white/55 backdrop-blur-xl border border-white/50 shadow-[0_6px_30px_rgba(15,23,42,0.05)] pl-6 pr-3 py-2.5"
+          }`}>
+            <div className="flex items-center gap-3">
+              <button
+                className="md:hidden p-2 -ml-2 text-foreground/80 hover:text-primary transition-colors"
+                onClick={() => setIsMobileMenuOpen(true)}
+                data-testid="button-mobile-menu"
               >
-                {link.label}
-                {location === link.href && (
-                  <motion.div 
-                    layoutId="nav-indicator"
-                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary" 
-                    initial={false}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
-                )}
+                <Menu className="w-5 h-5" strokeWidth={1.5} />
+              </button>
+              <Link href="/" className="flex items-center gap-2.5 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 group-hover:bg-primary/15 transition-colors">
+                  <Hexagon className="w-4 h-4 text-primary fill-primary/20 group-hover:rotate-90 transition-transform duration-1000 ease-[0.16,1,0.3,1]" strokeWidth={1.5} />
+                </span>
+                <span className="font-display font-semibold text-xl tracking-[0.3em] uppercase">Apex</span>
               </Link>
-            ))}
-          </nav>
+            </div>
 
-          <div className="flex items-center gap-4">
-            <Link href="/cart" className="relative p-2 text-foreground/80 hover:text-primary transition-colors group" data-testid="link-cart">
-              <ShoppingBag className="w-5 h-5 transition-transform duration-500 group-hover:-translate-y-1" strokeWidth={1.5} />
-              <AnimatePresence>
-                {itemCount > 0 && (
-                  <motion.span 
-                    initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
-                    className="absolute top-0 right-0 w-4 h-4 bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center rounded-full shadow-[0_0_15px_rgba(37,99,235,0.6)]"
+            <nav className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => {
+                const isActive = location === "/products" && activeCategory === link.category;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="relative px-4 py-2.5 text-[10px] font-semibold tracking-[0.28em] uppercase rounded-full transition-colors duration-300"
                   >
-                    {itemCount}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </Link>
+                    {isActive && (
+                      <motion.span
+                        layoutId="nav-pill"
+                        className="absolute inset-0 rounded-full bg-primary/10 border border-primary/15"
+                        initial={false}
+                        transition={{ type: "spring", stiffness: 350, damping: 32 }}
+                      />
+                    )}
+                    <span className={`relative z-10 transition-colors duration-300 ${isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                      {link.label}
+                    </span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="flex items-center gap-2">
+              <Link href="/cart" className="relative w-10 h-10 flex items-center justify-center rounded-full text-foreground/80 hover:text-primary hover:bg-primary/5 transition-colors group" data-testid="link-cart">
+                <ShoppingBag className="w-5 h-5 transition-transform duration-500 group-hover:-translate-y-0.5" strokeWidth={1.5} />
+                <AnimatePresence>
+                  {itemCount > 0 && (
+                    <motion.span 
+                      initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
+                      className="absolute top-1 right-1 w-4 h-4 bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center rounded-full shadow-[0_0_15px_rgba(37,99,235,0.6)]"
+                    >
+                      {itemCount}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
