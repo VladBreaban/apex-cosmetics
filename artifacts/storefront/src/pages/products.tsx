@@ -3,6 +3,7 @@ import { Link, useSearch } from "wouter";
 import { getProductImage } from "@/lib/image-map";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
+import waterHeaderBg from "@assets/generated_images/water_header_bg.png";
 
 export default function Products() {
   const searchString = useSearch();
@@ -14,8 +15,16 @@ export default function Products() {
   const categories = ["All", "Facial", "Body", "Hair", "Bundle"];
 
   return (
-    <div className="min-h-screen bg-background pt-32 pb-32">
-      <div className="absolute top-0 left-0 right-0 h-[50vh] mesh-gradient opacity-60 pointer-events-none" />
+    <div className="relative min-h-screen bg-background pt-32 pb-32">
+      <div className="absolute top-0 left-0 right-0 h-[65vh] pointer-events-none overflow-hidden">
+        <img
+          src={waterHeaderBg}
+          alt=""
+          aria-hidden="true"
+          className="w-full h-full object-cover object-top opacity-80"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 to-background" />
+      </div>
       
       <div className="container mx-auto px-6 lg:px-12 relative z-10">
         

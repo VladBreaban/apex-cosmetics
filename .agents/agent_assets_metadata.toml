@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "Azh9pBXs0hvDlQJBW8hZ8"
+uri = "file://attached_assets/generated_images/water_header_bg.png"
+type = "image"
+title = "water header background"
