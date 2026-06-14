@@ -113,7 +113,7 @@ export default function Products() {
                         <img 
                           src={getProductImage(product.name)} 
                           alt={product.name} 
-                          className="w-full h-full object-cover p-10 transform group-hover:scale-105 transition-transform duration-700 ease-[0.16,1,0.3,1] relative mix-blend-multiply dark:mix-blend-screen" 
+                          className="w-full h-full object-contain p-8 transform group-hover:scale-105 transition-transform duration-700 ease-[0.16,1,0.3,1] relative" 
                         />
                       </Link>
                       <div className="flex flex-col flex-1">
