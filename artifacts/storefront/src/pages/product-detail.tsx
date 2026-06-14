@@ -7,6 +7,7 @@ import { useCart } from "@/lib/cart-context";
 import { Minus, Plus, ArrowLeft, Beaker, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
+import waterHeaderBg from "@assets/generated_images/water_header_bg.png";
 
 export default function ProductDetail() {
   const params = useParams();
@@ -88,7 +89,12 @@ export default function ProductDetail() {
             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
             className="lg:col-span-6 bg-white border border-border/50 rounded-sm aspect-[4/5] relative overflow-hidden flex items-center justify-center p-12 lg:p-24 shadow-sm lg:sticky lg:top-32 group"
           >
-            <div className="absolute inset-0 mesh-gradient opacity-40 transition-opacity duration-700 group-hover:opacity-70" />
+            <img
+              src={waterHeaderBg}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full object-cover opacity-70 transition-opacity duration-700 group-hover:opacity-90"
+            />
             <motion.img 
               src={getProductImage(product.name)} 
               alt={product.name} 
