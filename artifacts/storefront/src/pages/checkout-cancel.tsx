@@ -1,35 +1,33 @@
 import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { XCircle, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function CheckoutCancel() {
   return (
-    <div className="min-h-[70vh] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-card border border-border rounded-3xl p-8 md:p-12 max-w-lg w-full text-center"
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="max-w-2xl w-full text-center"
       >
-        <div className="flex justify-center mb-6">
-          <XCircle className="w-16 h-16 text-muted-foreground" />
-        </div>
+        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground mb-6 block">Action Incomplete</span>
+        <h1 className="text-5xl md:text-6xl font-display font-light tracking-tight mb-8">
+          Checkout <span className="font-medium italic">Suspended.</span>
+        </h1>
         
-        <h1 className="text-3xl font-display font-extrabold uppercase tracking-tight mb-4">Checkout Cancelled</h1>
-        <p className="text-muted-foreground text-lg mb-8">
-          Your order was not completed. Your items remain in your cart when you're ready to proceed.
+        <p className="text-muted-foreground text-lg mb-12 font-light leading-relaxed max-w-lg mx-auto">
+          Your transaction was not finalized. Your selected formulations remain secure in your regimen for when you are ready to proceed.
         </p>
         
-        <div className="flex flex-col gap-4">
-          <Button asChild size="lg" className="w-full h-14 font-bold uppercase tracking-wide">
-            <Link href="/cart">Return to Cart</Link>
-          </Button>
-          <Button asChild variant="outline" size="lg" className="w-full h-14 font-bold uppercase tracking-wide">
-            <Link href="/products">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Browse Catalog
-            </Link>
-          </Button>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+          <Link href="/cart" className="w-full sm:w-auto inline-flex items-center justify-center px-10 py-5 bg-foreground text-background text-sm font-semibold uppercase tracking-widest hover:bg-primary transition-colors duration-500">
+            Return to Regimen
+          </Link>
+          <Link href="/products" className="w-full sm:w-auto inline-flex items-center justify-center px-10 py-5 bg-transparent border border-border text-foreground text-sm font-semibold uppercase tracking-widest hover:border-foreground transition-colors duration-500">
+            <ArrowLeft className="w-4 h-4 mr-3" />
+            Collection
+          </Link>
         </div>
       </motion.div>
     </div>

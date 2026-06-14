@@ -1,10 +1,9 @@
 import { useCart } from "@/lib/cart-context";
 import { useCreateCheckout } from "@workspace/api-client-react";
 import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
 import { getProductImage } from "@/lib/image-map";
-import { Minus, Plus, Trash2, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { Minus, Plus, X, ArrowRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Cart() {
   const { items, updateQuantity, removeItem, subtotal, itemCount } = useCart();
@@ -33,111 +32,132 @@ export default function Cart() {
 
   if (items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-32 text-center max-w-lg">
-        <h1 className="text-4xl font-display font-extrabold uppercase tracking-tight mb-6">Your Cart is Empty</h1>
-        <p className="text-muted-foreground mb-8 text-lg">Your protocol requires premium formulations. Explore our catalog.</p>
-        <Button size="lg" asChild className="h-14 px-8 text-lg font-bold uppercase tracking-wide">
-          <Link href="/products">Shop Formulations</Link>
-        </Button>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+          <h1 className="text-4xl md:text-5xl font-display font-light tracking-tight mb-6">Your Regimen is Empty</h1>
+          <p className="text-muted-foreground font-light mb-10 max-w-md mx-auto leading-relaxed">
+            True longevity requires commitment. Select your clinical-grade formulations to begin your protocol.
+          </p>
+          <Link href="/products" className="inline-flex items-center justify-center px-8 py-4 bg-foreground text-background text-sm font-semibold uppercase tracking-widest hover:bg-primary transition-colors duration-500">
+            Explore Collection
+          </Link>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-6xl">
-      <h1 className="text-4xl font-display font-extrabold uppercase tracking-tight mb-12">Protocol Cart</h1>
+    <div className="min-h-screen bg-background pt-32 pb-24">
+      <div className="container mx-auto px-6 lg:px-12 max-w-7xl">
+        <header className="mb-16 border-b border-border pb-8">
+          <h1 className="text-4xl md:text-5xl font-display font-light tracking-tight">Active Protocol</h1>
+        </header>
 
-      <div className="grid lg:grid-cols-3 gap-12">
-        <div className="lg:col-span-2 space-y-6">
-          {items.map((item, idx) => (
-            <motion.div 
-              key={item.priceId}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className="flex gap-6 p-4 md:p-6 bg-card border border-border rounded-2xl"
-            >
-              <div className="w-24 md:w-32 aspect-square bg-muted rounded-xl p-2 flex items-center justify-center shrink-0">
-                <img 
-                  src={getProductImage(item.productName)} 
-                  alt={item.productName}
-                  className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal"
-                />
-              </div>
+        <div className="grid lg:grid-cols-12 gap-16">
+          <div className="lg:col-span-8">
+            <div className="hidden md:grid grid-cols-12 gap-6 border-b border-border pb-4 mb-6 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              <div className="col-span-6">Formulation</div>
+              <div className="col-span-3 text-center">Quantity</div>
+              <div className="col-span-3 text-right">Total</div>
+            </div>
 
-              <div className="flex-1 flex flex-col justify-between">
-                <div className="flex justify-between items-start gap-4">
-                  <Link href={`/products/${item.productId}`} className="hover:text-primary transition-colors">
-                    <h3 className="font-display font-bold uppercase tracking-tight md:text-xl leading-tight">{item.productName}</h3>
-                  </Link>
-                  <button 
-                    onClick={() => removeItem(item.priceId)}
-                    className="text-muted-foreground hover:text-destructive transition-colors p-1"
-                    aria-label="Remove item"
+            <div className="space-y-8">
+              <AnimatePresence>
+                {items.map((item, idx) => (
+                  <motion.div 
+                    key={item.priceId}
+                    layout
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.4, delay: idx * 0.05 }}
+                    className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center py-6 border-b border-border/50 group"
                   >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                </div>
+                    <div className="col-span-1 md:col-span-6 flex gap-6 items-center">
+                      <Link href={`/products/${item.productId}`} className="w-24 h-32 bg-secondary/10 shrink-0 border border-border/50 p-2 relative overflow-hidden flex items-center justify-center">
+                        <img 
+                          src={getProductImage(item.productName)} 
+                          alt={item.productName}
+                          className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-screen"
+                        />
+                      </Link>
+                      <div className="flex flex-col">
+                        <Link href={`/products/${item.productId}`} className="hover:text-primary transition-colors mb-2">
+                          <h3 className="font-display font-medium text-lg leading-tight tracking-wide">{item.productName}</h3>
+                        </Link>
+                        <span className="text-sm font-light text-muted-foreground">
+                          ${(item.unitAmount / 100).toFixed(2)}
+                        </span>
+                        <button 
+                          onClick={() => removeItem(item.priceId)}
+                          className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground hover:text-destructive transition-colors mt-4 text-left w-fit flex items-center gap-1"
+                        >
+                          <X className="w-3 h-3" /> Remove
+                        </button>
+                      </div>
+                    </div>
 
-                <div className="flex items-end justify-between mt-4">
-                  <div className="flex items-center border border-border rounded-lg bg-background">
-                    <button 
-                      className="p-2 hover:bg-muted transition-colors"
-                      onClick={() => updateQuantity(item.priceId, item.quantity - 1)}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <div className="w-10 text-center font-medium text-sm">{item.quantity}</div>
-                    <button 
-                      className="p-2 hover:bg-muted transition-colors"
-                      onClick={() => updateQuantity(item.priceId, item.quantity + 1)}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                  
-                  <div className="font-bold text-lg">
-                    ${((item.unitAmount * item.quantity) / 100).toFixed(2)}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="lg:col-span-1">
-          <div className="bg-card border border-border rounded-2xl p-6 md:p-8 sticky top-24">
-            <h2 className="font-display font-bold uppercase tracking-wider mb-6 pb-6 border-b border-border">Order Summary</h2>
-            
-            <div className="space-y-4 mb-6">
-              <div className="flex justify-between text-muted-foreground">
-                <span>Subtotal ({itemCount} items)</span>
-                <span>${(subtotal / 100).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Shipping</span>
-                <span>Calculated at checkout</span>
-              </div>
+                    <div className="col-span-1 md:col-span-3 flex md:justify-center">
+                      <div className="flex items-center border border-border w-fit">
+                        <button 
+                          className="p-3 hover:bg-secondary/20 transition-colors text-muted-foreground"
+                          onClick={() => updateQuantity(item.priceId, item.quantity - 1)}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <div className="w-10 text-center font-medium text-sm">{item.quantity}</div>
+                        <button 
+                          className="p-3 hover:bg-secondary/20 transition-colors text-muted-foreground"
+                          onClick={() => updateQuantity(item.priceId, item.quantity + 1)}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="col-span-1 md:col-span-3 md:text-right font-light text-lg tracking-wide">
+                      ${((item.unitAmount * item.quantity) / 100).toFixed(2)}
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
+          </div>
 
-            <div className="flex justify-between items-center py-6 border-t border-border mb-6">
-              <span className="font-bold uppercase tracking-wider">Estimated Total</span>
-              <span className="text-3xl font-light tracking-tight">${(subtotal / 100).toFixed(2)}</span>
+          <div className="lg:col-span-4">
+            <div className="bg-secondary/5 border border-border p-8 lg:p-10 sticky top-32">
+              <h2 className="font-sans font-semibold uppercase tracking-[0.2em] text-xs mb-8">Protocol Summary</h2>
+              
+              <div className="space-y-4 mb-8 text-sm font-light border-b border-border pb-8">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Subtotal ({itemCount} formulations)</span>
+                  <span className="text-foreground">${(subtotal / 100).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Priority Shipping</span>
+                  <span className="text-foreground">Calculated at checkout</span>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center mb-10">
+                <span className="font-semibold uppercase tracking-[0.1em] text-sm">Estimated Total</span>
+                <span className="text-3xl font-display font-light tracking-tight">${(subtotal / 100).toFixed(2)}</span>
+              </div>
+
+              <button 
+                className="w-full relative group overflow-hidden bg-foreground text-background py-5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                onClick={handleCheckout}
+                disabled={createCheckout.isPending}
+              >
+                <div className="absolute inset-0 bg-primary translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-[0.16,1,0.3,1]" />
+                <span className="relative z-10 text-sm font-semibold uppercase tracking-widest group-hover:text-white transition-colors duration-500 flex items-center">
+                  {createCheckout.isPending ? "Processing..." : "Initiate Checkout"}
+                  {!createCheckout.isPending && <ArrowRight className="w-4 h-4 ml-2" />}
+                </span>
+              </button>
+              
+              <p className="text-[10px] text-center text-muted-foreground mt-6 uppercase tracking-[0.1em]">
+                Secure clinical dispatch via Stripe.
+              </p>
             </div>
-
-            <Button 
-              size="lg" 
-              className="w-full h-14 text-lg font-bold uppercase tracking-wide"
-              onClick={handleCheckout}
-              disabled={createCheckout.isPending}
-            >
-              {createCheckout.isPending ? "Processing..." : "Proceed to Checkout"}
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-            
-            <p className="text-xs text-center text-muted-foreground mt-4">
-              Secure checkout processed by Stripe.
-            </p>
           </div>
         </div>
       </div>
