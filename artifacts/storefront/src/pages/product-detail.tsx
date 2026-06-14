@@ -1,12 +1,12 @@
 import { useGetProduct } from "@workspace/api-client-react";
 import { useParams, Link } from "wouter";
 import { getProductImage } from "@/lib/image-map";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/lib/cart-context";
-import { Minus, Plus, ArrowLeft, Beaker, ShieldCheck } from "lucide-react";
+import { Minus, Plus, ArrowLeft, Beaker, ShieldCheck, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import waterHeaderBg from "@assets/generated_images/water_header_bg.png";
 
 export default function ProductDetail() {
@@ -15,6 +15,14 @@ export default function ProductDetail() {
   const { toast } = useToast();
   const { addItem } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const [justAdded, setJustAdded] = useState(false);
+  const justAddedTimer = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (justAddedTimer.current !== null) window.clearTimeout(justAddedTimer.current);
+    };
+  }, []);
 
   const { data: product, isLoading, error } = useGetProduct(id, {
     query: {
@@ -70,9 +78,13 @@ export default function ProductDetail() {
       imageKey: null
     });
 
+    setJustAdded(true);
+    if (justAddedTimer.current !== null) window.clearTimeout(justAddedTimer.current);
+    justAddedTimer.current = window.setTimeout(() => setJustAdded(false), 2000);
+
     toast({
-      title: "Protocol Updated",
-      description: `${quantity}x ${product.name} added to your regimen.`,
+      title: "Added to Cart",
+      description: `${quantity}× ${product.name} added to your cart.`,
     });
   };
 
@@ -149,16 +161,50 @@ export default function ProductDetail() {
                 </div>
               </div>
 
-              <button 
-                className="w-full relative group overflow-hidden bg-foreground text-background py-5 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-foreground/5 hover:shadow-primary/20 transition-all" 
+              <motion.button 
+                whileTap={{ scale: 0.985 }}
+                className="w-full relative group overflow-hidden bg-foreground text-background py-5 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-foreground/5 hover:shadow-primary/20 transition-shadow" 
                 onClick={handleAddToCart}
                 disabled={!price}
               >
                 <div className="absolute inset-0 bg-primary translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-[0.16,1,0.3,1]" />
-                <span className="relative z-10 text-sm font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-500">
-                  {price ? "Add to Regimen" : "Currently Unavailable"}
+                <motion.div 
+                  initial={false}
+                  animate={{ y: justAdded ? "0%" : "100%" }}
+                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute inset-0 bg-primary" 
+                />
+                <span className="relative z-10 flex items-center justify-center text-sm font-bold uppercase tracking-widest min-h-[1.25rem]">
+                  <AnimatePresence mode="wait" initial={false}>
+                    {justAdded ? (
+                      <motion.span 
+                        key="added"
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex items-center gap-2.5 text-white"
+                      >
+                        <motion.span
+                          initial={{ scale: 0, rotate: -45 }} animate={{ scale: 1, rotate: 0 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 18, delay: 0.1 }}
+                          className="flex"
+                        >
+                          <Check className="w-4 h-4" strokeWidth={3} />
+                        </motion.span>
+                        Added to Cart
+                      </motion.span>
+                    ) : (
+                      <motion.span 
+                        key="default"
+                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="group-hover:text-white transition-colors duration-500"
+                      >
+                        {price ? "Add to Cart" : "Currently Unavailable"}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </span>
-              </button>
+              </motion.button>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-8 border-t border-border/60 pt-12">
