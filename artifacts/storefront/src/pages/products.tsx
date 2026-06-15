@@ -1,4 +1,5 @@
 import { useListProducts } from "@workspace/api-client-react";
+import { useEffect } from "react";
 import { Link, useSearch } from "wouter";
 import { getProductImage } from "@/lib/image-map";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,6 +12,10 @@ export default function Products() {
   const categoryParam = searchParams.get("category") || undefined;
 
   const { data: productsData, isLoading } = useListProducts({ category: categoryParam });
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [categoryParam]);
 
   const categories = ["All", "Facial", "Body", "Hair", "Bundle"];
 
