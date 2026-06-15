@@ -1,7 +1,8 @@
 import { useListProducts } from "@workspace/api-client-react";
 import { useEffect } from "react";
-import { Link, useSearch } from "wouter";
+import { Link, useSearch, useLocation } from "wouter";
 import { getProductImage } from "@/lib/image-map";
+import { useCart } from "@/lib/cart-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import waterHeaderBg from "@assets/generated_images/water_header_bg.png";
@@ -12,6 +13,8 @@ export default function Products() {
   const categoryParam = searchParams.get("category") || undefined;
 
   const { data: productsData, isLoading } = useListProducts({ category: categoryParam });
+  const { addItem } = useCart();
+  const [, navigate] = useLocation();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -153,9 +156,32 @@ export default function Products() {
                             </h3>
                           </Link>
                         </div>
-                        <span className="font-sans text-sm text-muted-foreground mt-auto tracking-wide">
-                          {product.prices?.[0] ? `$${(product.prices[0].unitAmount / 100).toFixed(2)}` : 'Unavailable'}
-                        </span>
+                        <div className="flex items-center justify-between gap-3 mt-auto">
+                          <span className="font-sans text-sm text-muted-foreground tracking-wide">
+                            {product.prices?.[0] ? `$${(product.prices[0].unitAmount / 100).toFixed(2)}` : 'Unavailable'}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={!product.prices?.[0]}
+                            onClick={() => {
+                              const price = product.prices?.[0];
+                              if (!price) return;
+                              addItem({
+                                priceId: price.id,
+                                productId: product.id,
+                                quantity: 1,
+                                productName: product.name,
+                                unitAmount: price.unitAmount,
+                                currency: price.currency,
+                                imageKey: null,
+                              });
+                              navigate("/checkout");
+                            }}
+                            className="shrink-0 bg-primary text-white text-[10px] font-bold uppercase tracking-[0.2em] px-5 py-2.5 rounded-sm shadow-md shadow-primary/20 hover:shadow-primary/40 hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Buy Now
+                          </button>
+                        </div>
                       </div>
                     </motion.div>
                   ))
