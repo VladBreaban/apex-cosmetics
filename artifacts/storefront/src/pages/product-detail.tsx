@@ -1,5 +1,5 @@
 import { useGetProduct } from "@workspace/api-client-react";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { getProductImage } from "@/lib/image-map";
 import { useState, useRef, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +15,7 @@ export default function ProductDetail() {
   const id = params.id as string;
   const { toast } = useToast();
   const { addItem } = useCart();
+  const [, navigate] = useLocation();
   const [quantity, setQuantity] = useState(1);
   const [justAdded, setJustAdded] = useState(false);
   const justAddedTimer = useRef<number | null>(null);
@@ -87,6 +88,20 @@ export default function ProductDetail() {
       title: "Added to Cart",
       description: `${quantity}× ${product.name} added to your cart.`,
     });
+  };
+
+  const handleBuyNow = () => {
+    if (!price) return;
+    addItem({
+      priceId: price.id,
+      productId: product.id,
+      quantity,
+      productName: product.name,
+      unitAmount: price.unitAmount,
+      currency: price.currency,
+      imageKey: null
+    });
+    navigate("/checkout");
   };
 
   return (
@@ -221,6 +236,16 @@ export default function ProductDetail() {
                 )}
               </AnimatePresence>
               </div>
+
+              <motion.button
+                whileTap={{ scale: 0.985 }}
+                whileHover={{ scale: 1.01 }}
+                className="w-full mt-4 bg-white text-primary border-2 border-primary py-[1.1rem] rounded-sm text-sm font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleBuyNow}
+                disabled={!price}
+              >
+                Buy Now
+              </motion.button>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-8 border-t border-border/60 pt-12">
