@@ -164,17 +164,11 @@ export default function ProductDetail() {
               <div className="relative">
               <motion.button 
                 whileTap={{ scale: 0.985 }}
-                className="w-full relative group overflow-hidden bg-foreground text-background py-5 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-foreground/5 hover:shadow-primary/20 transition-shadow" 
+                whileHover={{ scale: 1.01 }}
+                className="w-full relative bg-primary text-white py-5 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-shadow" 
                 onClick={handleAddToCart}
                 disabled={!price}
               >
-                <div className="absolute inset-0 bg-primary translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-[0.16,1,0.3,1]" />
-                <motion.div 
-                  initial={false}
-                  animate={{ y: justAdded ? "0%" : "100%" }}
-                  transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute inset-0 bg-primary" 
-                />
                 <span className="relative z-10 flex items-center justify-center text-sm font-bold uppercase tracking-widest min-h-[1.25rem]">
                   <AnimatePresence mode="wait" initial={false}>
                     {justAdded ? (
@@ -198,7 +192,7 @@ export default function ProductDetail() {
                         key="default"
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.3 }}
-                        className="group-hover:text-white transition-colors duration-500"
+                        className="text-white"
                       >
                         {price ? "Add to Cart" : "Currently Unavailable"}
                       </motion.span>
@@ -216,7 +210,7 @@ export default function ProductDetail() {
                       animate={{ scale: 7, opacity: 0 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute w-16 h-16 rounded-full border-2 border-primary/60"
+                      className="absolute w-16 h-16 rounded-full border-2 border-white/80"
                     />
                     {[
                       { x: -150, y: -40, s: 1 }, { x: -95, y: -64, s: 0.7 },
@@ -231,7 +225,7 @@ export default function ProductDetail() {
                         initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
                         animate={{ x: d.x, y: d.y, scale: [0, d.s, d.s * 0.55], opacity: [0, 1, 0] }}
                         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: i * 0.012 }}
-                        className="absolute w-3 h-3 rounded-full bg-primary shadow-[0_0_10px_rgba(37,99,235,0.7)]"
+                        className="absolute w-3 h-3 rounded-full bg-white shadow-[0_0_10px_rgba(37,99,235,0.55)]"
                       />
                     ))}
                   </div>
