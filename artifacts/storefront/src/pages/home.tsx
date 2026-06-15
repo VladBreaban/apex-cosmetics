@@ -38,17 +38,37 @@ export default function Home() {
         {/* Water drop / ripple background */}
         <motion.div
           style={{ y: heroY }}
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none overflow-hidden"
         >
-          <img
+          <motion.img
             src={waterDropBg}
             alt=""
             aria-hidden="true"
-            className="w-full h-full object-cover object-center opacity-70 mix-blend-multiply"
+            animate={{
+              scale: [1.05, 1.15, 1.08, 1.05],
+              x: [0, -25, 15, 0],
+              y: [0, 18, -12, 0],
+            }}
+            transition={{ duration: 24, repeat: Infinity, ease: "easeInOut" }}
+            className="w-full h-full object-cover object-center opacity-70 mix-blend-multiply will-change-transform"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background" />
         </motion.div>
+
+        {/* Drifting ripple accent for added motion */}
+        <motion.img
+          src={waterDropBg}
+          alt=""
+          aria-hidden="true"
+          animate={{
+            scale: [1.3, 1.45, 1.3],
+            rotate: [0, 3, -3, 0],
+            opacity: [0.18, 0.3, 0.18],
+          }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-1/4 right-0 w-[80%] h-[150%] object-contain pointer-events-none mix-blend-multiply will-change-transform"
+        />
         
         {/* Animated abstract blobs for "splash" energy */}
         <motion.div 
