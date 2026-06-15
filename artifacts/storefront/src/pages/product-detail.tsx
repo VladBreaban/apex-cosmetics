@@ -8,7 +8,7 @@ import { Minus, Plus, ArrowLeft, Beaker, ShieldCheck, Check } from "lucide-react
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import waterHeaderBg from "@assets/generated_images/water_header_bg.png";
-import waterSplash from "@assets/generated_images/water_splash_burst.png";
+import waterSplash from "@assets/generated_images/water_splash_burst_t.png";
 
 export default function ProductDetail() {
   const params = useParams();
@@ -210,11 +210,11 @@ export default function ProductDetail() {
                       src={waterSplash}
                       alt=""
                       aria-hidden="true"
-                      initial={{ scale: 0.5, opacity: 0, y: 20 }}
-                      animate={{ scale: [0.5, 1.15, 1.25], opacity: [0, 1, 0], y: [20, -40, -70] }}
+                      initial={{ scale: 0.55, opacity: 0, y: 10 }}
+                      animate={{ scale: [0.55, 1.05, 1.2], opacity: [0, 1, 1, 0], y: [10, -25, -55] }}
                       exit={{ opacity: 0 }}
-                      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], times: [0, 0.4, 1] }}
-                      className="absolute bottom-0 w-[150%] max-w-none mix-blend-screen select-none"
+                      transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], times: [0, 0.3, 0.6, 1] }}
+                      className="absolute bottom-1/2 w-[180%] max-w-none select-none drop-shadow-[0_4px_12px_rgba(37,99,235,0.35)]"
                       style={{ transformOrigin: "center bottom" }}
                     />
                   </div>
