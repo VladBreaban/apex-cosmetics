@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, Activity, Droplets, ChevronRight } from "lucide-react";
 import { useRef } from "react";
 import scienceWaterPhoto from "@assets/generated_images/science_water_photo.png";
+import waterDropBg from "@assets/generated_images/water_header_bg.png";
 
 export default function Home() {
   const { data: featured, isLoading } = useListFeaturedProducts();
@@ -33,6 +34,21 @@ export default function Home() {
       {/* Hero Section */}
       <section ref={heroRef} className="relative min-h-[100dvh] flex items-center overflow-hidden bg-background pt-20">
         <div className="absolute inset-0 mesh-gradient opacity-80" />
+
+        {/* Water drop / ripple background */}
+        <motion.div
+          style={{ y: heroY }}
+          className="absolute inset-0 pointer-events-none"
+        >
+          <img
+            src={waterDropBg}
+            alt=""
+            aria-hidden="true"
+            className="w-full h-full object-cover object-center opacity-70 mix-blend-multiply"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background" />
+        </motion.div>
         
         {/* Animated abstract blobs for "splash" energy */}
         <motion.div 
