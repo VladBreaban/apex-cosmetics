@@ -88,9 +88,9 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 className="flex flex-col sm:flex-row gap-6"
               >
-                <Link href="/products" className="group relative inline-flex items-center justify-center px-8 py-5 bg-foreground text-background overflow-hidden rounded-sm shadow-xl shadow-primary/10 hover:shadow-primary/20 transition-shadow">
-                  <div className="absolute inset-0 bg-primary translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-[0.16,1,0.3,1]" />
-                  <span className="relative z-10 text-sm font-bold uppercase tracking-widest group-hover:text-white transition-colors duration-500">
+                <Link href="/products" className="group relative inline-flex items-center justify-center px-8 py-5 bg-primary text-white overflow-hidden rounded-sm shadow-xl shadow-primary/20 hover:shadow-primary/40 transition-shadow">
+                  <div className="absolute inset-0 bg-primary/90 translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-[0.16,1,0.3,1]" />
+                  <span className="relative z-10 text-sm font-bold uppercase tracking-widest text-white transition-colors duration-500">
                     Explore Collection
                   </span>
                 </Link>
