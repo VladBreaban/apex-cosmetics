@@ -12,3 +12,9 @@ id = "8CMKe72C9SE9Mc9lOKSj3"
 uri = "file://attached_assets/generated_images/science_water_photo.png"
 type = "image"
 title = "science water product photo"
+
+[[generated]]
+id = "YSl9GivJCf8qTS-vYpksv"
+uri = "file://attached_assets/generated_images/water_splash_burst.png"
+type = "image"
+title = "generated_image"

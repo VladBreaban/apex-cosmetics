@@ -8,6 +8,7 @@ import { Minus, Plus, ArrowLeft, Beaker, ShieldCheck, Check } from "lucide-react
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import waterHeaderBg from "@assets/generated_images/water_header_bg.png";
+import waterSplash from "@assets/generated_images/water_splash_burst.png";
 
 export default function ProductDetail() {
   const params = useParams();
@@ -203,31 +204,19 @@ export default function ProductDetail() {
 
               <AnimatePresence>
                 {justAdded && (
-                  <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center overflow-visible">
-                    <motion.span
-                      key="ripple"
-                      initial={{ scale: 0, opacity: 0.6 }}
-                      animate={{ scale: 7, opacity: 0 }}
+                  <div className="absolute inset-0 z-20 pointer-events-none flex justify-center overflow-visible">
+                    <motion.img
+                      key="splash"
+                      src={waterSplash}
+                      alt=""
+                      aria-hidden="true"
+                      initial={{ scale: 0.5, opacity: 0, y: 20 }}
+                      animate={{ scale: [0.5, 1.15, 1.25], opacity: [0, 1, 0], y: [20, -40, -70] }}
                       exit={{ opacity: 0 }}
-                      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                      className="absolute w-16 h-16 rounded-full border-2 border-white/80"
+                      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], times: [0, 0.4, 1] }}
+                      className="absolute bottom-0 w-[150%] max-w-none mix-blend-screen select-none"
+                      style={{ transformOrigin: "center bottom" }}
                     />
-                    {[
-                      { x: -150, y: -40, s: 1 }, { x: -95, y: -64, s: 0.7 },
-                      { x: -45, y: -74, s: 0.9 }, { x: 45, y: -74, s: 0.85 },
-                      { x: 95, y: -64, s: 0.7 }, { x: 150, y: -40, s: 1 },
-                      { x: -120, y: 36, s: 0.8 }, { x: -50, y: 60, s: 0.6 },
-                      { x: 0, y: 70, s: 1 }, { x: 50, y: 60, s: 0.6 },
-                      { x: 120, y: 36, s: 0.8 },
-                    ].map((d, i) => (
-                      <motion.span
-                        key={`drop-${i}`}
-                        initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
-                        animate={{ x: d.x, y: d.y, scale: [0, d.s, d.s * 0.55], opacity: [0, 1, 0] }}
-                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: i * 0.012 }}
-                        className="absolute w-3 h-3 rounded-full bg-white shadow-[0_0_10px_rgba(37,99,235,0.55)]"
-                      />
-                    ))}
                   </div>
                 )}
               </AnimatePresence>
