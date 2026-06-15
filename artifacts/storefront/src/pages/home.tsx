@@ -94,11 +94,6 @@ export default function Home() {
                     Explore Collection
                   </span>
                 </Link>
-                <Link href="#science" className="group inline-flex items-center justify-center px-8 py-5 bg-transparent border border-border text-foreground hover:border-primary/50 hover:bg-white/50 backdrop-blur-sm rounded-sm transition-all duration-500">
-                  <span className="text-sm font-bold uppercase tracking-widest group-hover:text-primary transition-colors">
-                    The Science
-                  </span>
-                </Link>
               </motion.div>
             </motion.div>
 
