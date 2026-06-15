@@ -131,6 +131,28 @@ export default function Home() {
                   </span>
                 </Link>
               </motion.div>
+
+              {/* Mobile-only floating product showcase */}
+              <motion.div
+                initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 1.1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="lg:hidden relative mt-16 flex justify-center"
+              >
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/15 via-primary/5 to-transparent blur-2xl" />
+                <motion.div
+                  animate={{ y: [0, -14, 0], rotate: [-1.5, 1.5, -1.5] }}
+                  transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+                  className="relative w-[270px] h-[360px] glass-card rounded-2xl overflow-hidden shadow-2xl will-change-transform"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent pointer-events-none" />
+                  <img
+                    src={getProductImage("Facial Serum")}
+                    alt="Apex Health Facial Serum"
+                    className="w-full h-full object-contain p-6 mix-blend-multiply"
+                  />
+                </motion.div>
+              </motion.div>
             </motion.div>
 
             <motion.div 
