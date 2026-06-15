@@ -161,6 +161,7 @@ export default function ProductDetail() {
                 </div>
               </div>
 
+              <div className="relative">
               <motion.button 
                 whileTap={{ scale: 0.985 }}
                 className="w-full relative group overflow-hidden bg-foreground text-background py-5 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-foreground/5 hover:shadow-primary/20 transition-shadow" 
@@ -205,6 +206,38 @@ export default function ProductDetail() {
                   </AnimatePresence>
                 </span>
               </motion.button>
+
+              <AnimatePresence>
+                {justAdded && (
+                  <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center overflow-visible">
+                    <motion.span
+                      key="ripple"
+                      initial={{ scale: 0, opacity: 0.6 }}
+                      animate={{ scale: 7, opacity: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                      className="absolute w-16 h-16 rounded-full border-2 border-primary/60"
+                    />
+                    {[
+                      { x: -150, y: -40, s: 1 }, { x: -95, y: -64, s: 0.7 },
+                      { x: -45, y: -74, s: 0.9 }, { x: 45, y: -74, s: 0.85 },
+                      { x: 95, y: -64, s: 0.7 }, { x: 150, y: -40, s: 1 },
+                      { x: -120, y: 36, s: 0.8 }, { x: -50, y: 60, s: 0.6 },
+                      { x: 0, y: 70, s: 1 }, { x: 50, y: 60, s: 0.6 },
+                      { x: 120, y: 36, s: 0.8 },
+                    ].map((d, i) => (
+                      <motion.span
+                        key={`drop-${i}`}
+                        initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                        animate={{ x: d.x, y: d.y, scale: [0, d.s, d.s * 0.55], opacity: [0, 1, 0] }}
+                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: i * 0.012 }}
+                        className="absolute w-3 h-3 rounded-full bg-primary shadow-[0_0_10px_rgba(37,99,235,0.7)]"
+                      />
+                    ))}
+                  </div>
+                )}
+              </AnimatePresence>
+              </div>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-8 border-t border-border/60 pt-12">
