@@ -4,7 +4,7 @@ import { useCart } from "@/lib/cart-context";
 import { useCreateCheckout, useGetShippingRates } from "@workspace/api-client-react";
 import { getProductImage } from "@/lib/image-map";
 import { motion } from "framer-motion";
-import { ArrowLeft, Truck, CheckCircle2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Truck, CheckCircle2, AlertCircle, Minus, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ShippingForm {
@@ -41,7 +41,7 @@ function isAddressComplete(form: ShippingForm) {
 }
 
 export default function Checkout() {
-  const { items, subtotal, itemCount } = useCart();
+  const { items, subtotal, itemCount, updateQuantity, removeItem } = useCart();
   const createCheckout = useCreateCheckout();
   const shippingRates = useGetShippingRates();
   const [, navigate] = useLocation();
@@ -293,8 +293,36 @@ export default function Checkout() {
                         <img src={getProductImage(item.productName)} alt={item.productName} className="w-full h-full object-contain mix-blend-multiply" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium leading-tight truncate mb-1">{item.productName}</p>
-                        <p className="text-xs text-muted-foreground font-light">Qty {item.quantity}</p>
+                        <p className="text-sm font-medium leading-tight truncate mb-2">{item.productName}</p>
+                        <div className="flex items-center gap-3">
+                          <div className="inline-flex items-center border border-border rounded-sm overflow-hidden">
+                            <button
+                              type="button"
+                              aria-label={`Decrease quantity of ${item.productName}`}
+                              onClick={() => updateQuantity(item.priceId, item.quantity - 1)}
+                              className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-white transition-colors"
+                            >
+                              <Minus className="w-3 h-3" strokeWidth={2.5} />
+                            </button>
+                            <span className="w-8 text-center text-xs font-semibold tabular-nums select-none">{item.quantity}</span>
+                            <button
+                              type="button"
+                              aria-label={`Increase quantity of ${item.productName}`}
+                              onClick={() => updateQuantity(item.priceId, item.quantity + 1)}
+                              className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-white transition-colors"
+                            >
+                              <Plus className="w-3 h-3" strokeWidth={2.5} />
+                            </button>
+                          </div>
+                          <button
+                            type="button"
+                            aria-label={`Remove ${item.productName} from cart`}
+                            onClick={() => removeItem(item.priceId)}
+                            className="w-7 h-7 flex items-center justify-center text-muted-foreground/60 hover:text-destructive transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" strokeWidth={2} />
+                          </button>
+                        </div>
                       </div>
                       <span className="text-sm font-medium shrink-0">
                         ${((item.unitAmount * item.quantity) / 100).toFixed(2)}
