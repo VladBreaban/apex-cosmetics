@@ -24,6 +24,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/products?category=facial", label: "Face", category: "facial" },
     { href: "/products?category=body", label: "Body", category: "body" },
     { href: "/products?category=hair", label: "Hair", category: "hair" },
+    { href: "/contact", label: "Contact", category: null },
   ];
 
   return (
@@ -54,7 +55,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
             <nav className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => {
-                const isActive = location === "/products" && activeCategory === link.category;
+                const isActive = link.href.startsWith("/products")
+                  ? location === "/products" && activeCategory === link.category
+                  : location === link.href;
                 return (
                   <Link
                     key={link.href}
@@ -187,6 +190,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="pt-8 border-t border-border text-[11px] text-muted-foreground flex flex-col md:flex-row justify-between items-center gap-4 font-light tracking-[0.1em] uppercase">
             <p>&copy; {new Date().getFullYear()} Apex Health Laboratories.</p>
             <div className="flex gap-8">
+              <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
               <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
               <a href="#" className="hover:text-foreground transition-colors">Terms</a>
             </div>
