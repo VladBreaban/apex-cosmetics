@@ -47,9 +47,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
               >
                 <Menu className="w-5 h-5" strokeWidth={1.5} />
               </button>
-              <Link href="/" className="flex items-center gap-2.5 group">
-                <img src={apexLogo} alt="Apex Health" className="h-10 w-auto object-contain group-hover:scale-105 transition-transform duration-500" />
-                <span className="font-display font-semibold text-xl tracking-[0.3em] uppercase">Apex</span>
+              <Link href="/" className="flex items-center group" aria-label="Apex Health home">
+                <img src={apexLogo} alt="Apex Health" className="h-12 w-auto object-contain group-hover:scale-105 transition-transform duration-500" />
               </Link>
             </div>
 
@@ -107,9 +106,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             className="fixed inset-0 z-[100] bg-white/95 backdrop-blur-3xl md:hidden"
           >
             <div className="flex items-center justify-between p-6 border-b border-border/50">
-              <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3">
-                <img src={apexLogo} alt="Apex Health" className="h-10 w-auto object-contain" />
-                <span className="font-display font-medium text-2xl tracking-[0.25em] uppercase">Apex</span>
+              <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center" aria-label="Apex Health home">
+                <img src={apexLogo} alt="Apex Health" className="h-12 w-auto object-contain" />
               </Link>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -153,9 +151,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto px-6 lg:px-12 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-8 mb-24">
             <div className="md:col-span-5 space-y-8">
-              <div className="flex items-center gap-3 group">
-                <img src={apexLogo} alt="Apex Health" className="h-12 w-auto object-contain group-hover:scale-105 transition-transform duration-700" />
-                <span className="font-display font-medium text-2xl tracking-[0.25em] uppercase">Apex</span>
+              <div className="flex items-center group">
+                <img src={apexLogo} alt="Apex Health" className="h-16 w-auto object-contain group-hover:scale-105 transition-transform duration-700" />
               </div>
               <p className="text-muted-foreground max-w-sm font-light leading-relaxed text-sm">
                 Clinical-grade GHK-Cu copper peptide formulations. Engineered at the intersection of longevity biotech and luxury wellness.
