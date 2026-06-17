@@ -191,8 +191,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <p>&copy; {new Date().getFullYear()} Apex Health Laboratories.</p>
             <div className="flex gap-8">
               <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
-              <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-              <a href="#" className="hover:text-foreground transition-colors">Terms</a>
+              <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
             </div>
           </div>
         </div>
