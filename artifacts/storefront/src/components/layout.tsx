@@ -1,8 +1,9 @@
 import { Link, useLocation, useSearch } from "wouter";
 import { useCart } from "@/lib/cart-context";
-import { ShoppingBag, Menu, X, Hexagon } from "lucide-react";
+import { ShoppingBag, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import apexLogo from "@assets/apex_logo_trimmed.png";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { itemCount } = useCart();
@@ -47,9 +48,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <Menu className="w-5 h-5" strokeWidth={1.5} />
               </button>
               <Link href="/" className="flex items-center gap-2.5 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 group-hover:bg-primary/15 transition-colors">
-                  <Hexagon className="w-4 h-4 text-primary fill-primary/20 group-hover:rotate-90 transition-transform duration-1000 ease-[0.16,1,0.3,1]" strokeWidth={1.5} />
-                </span>
+                <img src={apexLogo} alt="Apex Health" className="h-10 w-auto object-contain group-hover:scale-105 transition-transform duration-500" />
                 <span className="font-display font-semibold text-xl tracking-[0.3em] uppercase">Apex</span>
               </Link>
             </div>
@@ -109,7 +108,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           >
             <div className="flex items-center justify-between p-6 border-b border-border/50">
               <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3">
-                <Hexagon className="w-5 h-5 text-primary" strokeWidth={1.5} />
+                <img src={apexLogo} alt="Apex Health" className="h-10 w-auto object-contain" />
                 <span className="font-display font-medium text-2xl tracking-[0.25em] uppercase">Apex</span>
               </Link>
               <button
@@ -155,7 +154,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-8 mb-24">
             <div className="md:col-span-5 space-y-8">
               <div className="flex items-center gap-3 group">
-                <Hexagon className="w-6 h-6 text-primary group-hover:rotate-180 transition-transform duration-1000 ease-[0.16,1,0.3,1]" strokeWidth={1.5} />
+                <img src={apexLogo} alt="Apex Health" className="h-12 w-auto object-contain group-hover:scale-105 transition-transform duration-700" />
                 <span className="font-display font-medium text-2xl tracking-[0.25em] uppercase">Apex</span>
               </div>
               <p className="text-muted-foreground max-w-sm font-light leading-relaxed text-sm">
