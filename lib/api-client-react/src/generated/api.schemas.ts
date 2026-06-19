@@ -122,6 +122,22 @@ export interface OrderListResponse {
   total: number;
 }
 
+export type MeRole = typeof MeRole[keyof typeof MeRole];
+
+
+export const MeRole = {
+  customer: 'customer',
+  admin: 'admin',
+} as const;
+
+export interface Me {
+  id: string;
+  email: string;
+  /** @nullable */
+  name?: string | null;
+  role: MeRole;
+}
+
 export interface CustomerInput {
   email: string;
   name?: string;

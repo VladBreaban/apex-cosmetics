@@ -6,6 +6,7 @@ export const ordersTable = pgTable("orders", {
   id: serial("id").primaryKey(),
   stripeSessionId: text("stripe_session_id"),
   stripePaymentIntentId: text("stripe_payment_intent_id"),
+  userId: text("user_id"),
   customerEmail: text("customer_email").notNull(),
   customerName: text("customer_name"),
   status: text("status").notNull().default("pending"),

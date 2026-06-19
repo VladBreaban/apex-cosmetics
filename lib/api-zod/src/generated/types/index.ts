@@ -19,6 +19,8 @@ export * from './customerInput';
 export * from './errorResponse';
 export * from './healthStatus';
 export * from './listProductsParams';
+export * from './me';
+export * from './meRole';
 export * from './order';
 export * from './orderItem';
 export * from './orderListResponse';

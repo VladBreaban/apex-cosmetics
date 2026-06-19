@@ -1,39 +1,17 @@
 import { Router, type IRouter } from "express";
 import { storage } from "../storage";
+import { resolveLocalUser } from "../middlewares/auth";
 import { GetOrderParams } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
-router.get("/orders/:id", async (req, res): Promise<void> => {
-  const params = GetOrderParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
-    return;
-  }
-
-  // Support looking up by session_id (string) or numeric id
-  const idStr = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-
-  let order: any = null;
-
-  // If it starts with "cs_" it's a Stripe session ID
-  if (idStr.startsWith("cs_")) {
-    order = await storage.getOrderBySessionId(idStr);
-  } else {
-    const numId = parseInt(idStr, 10);
-    if (!isNaN(numId)) {
-      order = await storage.getOrder(numId);
-    }
-  }
-
-  if (!order) {
-    res.status(404).json({ error: "Order not found" });
-    return;
-  }
-
-  res.json({
+function serializeOrder(order: any) {
+  return {
     ...order,
-    createdAt: order.createdAt instanceof Date ? order.createdAt.toISOString() : order.createdAt,
+    createdAt:
+      order.createdAt instanceof Date
+        ? order.createdAt.toISOString()
+        : order.createdAt,
     items: (order.items ?? []).map((item: any) => ({
       id: item.id,
       productId: item.productId,
@@ -43,7 +21,52 @@ router.get("/orders/:id", async (req, res): Promise<void> => {
       quantity: item.quantity,
       currency: item.currency,
     })),
-  });
+  };
+}
+
+router.get("/orders/:id", async (req, res): Promise<void> => {
+  const params = GetOrderParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const idStr = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+  // Lookup by unguessable Stripe Checkout Session ID is public: it backs the
+  // post-checkout confirmation screen for guests who have no account yet.
+  if (idStr.startsWith("cs_")) {
+    const order = await storage.getOrderBySessionId(idStr);
+    if (!order) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+    res.json(serializeOrder(order));
+    return;
+  }
+
+  // Numeric order IDs are sequential and therefore enumerable. Require an
+  // authenticated owner (or an admin) to avoid IDOR exposure of order PII.
+  const numId = parseInt(idStr, 10);
+  if (isNaN(numId)) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+
+  const user = await resolveLocalUser(req);
+  if (!user) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const order = await storage.getOrder(numId);
+  // Treat unauthorized access as not-found so order existence isn't leaked.
+  if (!order || (user.role !== "admin" && order.userId !== user.id)) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+
+  res.json(serializeOrder(order));
 });
 
 export default router;

@@ -215,6 +215,45 @@ export const GetCustomerOrdersResponse = zod.object({
 
 
 /**
+ * @summary Get the current authenticated user
+ */
+export const GetMeResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "role": zod.enum(['customer', 'admin'])
+})
+
+
+/**
+ * @summary Get orders for the current authenticated user
+ */
+export const GetMyOrdersResponse = zod.object({
+  "data": zod.array(zod.object({
+  "id": zod.number(),
+  "stripeSessionId": zod.string().nullish(),
+  "stripePaymentIntentId": zod.string().nullish(),
+  "customerEmail": zod.string(),
+  "customerName": zod.string().nullish(),
+  "status": zod.string(),
+  "totalAmount": zod.number(),
+  "currency": zod.string(),
+  "createdAt": zod.string(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "productId": zod.string(),
+  "productName": zod.string(),
+  "priceId": zod.string().nullish(),
+  "unitAmount": zod.number(),
+  "quantity": zod.number(),
+  "currency": zod.string()
+})).optional()
+})),
+  "total": zod.number()
+})
+
+
+/**
  * @summary Get admin dashboard stats
  */
 export const AdminGetStatsResponse = zod.object({

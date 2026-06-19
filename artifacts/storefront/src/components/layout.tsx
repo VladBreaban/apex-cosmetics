@@ -1,8 +1,9 @@
 import { Link, useLocation, useSearch } from "wouter";
 import { useCart } from "@/lib/cart-context";
-import { ShoppingBag, Menu, X } from "lucide-react";
+import { ShoppingBag, Menu, X, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Show, UserButton } from "@clerk/react";
 import apexLogo from "@assets/apex_logo_trimmed.png";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -94,6 +95,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   )}
                 </AnimatePresence>
               </Link>
+
+              <Show when="signed-out">
+                <Link
+                  href="/sign-in"
+                  className="hidden sm:inline-flex items-center px-4 py-2 rounded-full text-[10px] font-semibold tracking-[0.22em] uppercase text-primary border border-primary/20 hover:bg-primary/5 transition-colors"
+                  data-testid="link-sign-in"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/sign-in"
+                  className="sm:hidden w-10 h-10 flex items-center justify-center rounded-full text-foreground/80 hover:text-primary hover:bg-primary/5 transition-colors"
+                  aria-label="Sign in"
+                  data-testid="link-sign-in-mobile"
+                >
+                  <User className="w-5 h-5" strokeWidth={1.5} />
+                </Link>
+              </Show>
+
+              <Show when="signed-in">
+                <Link
+                  href="/account"
+                  className="w-10 h-10 flex items-center justify-center rounded-full text-foreground/80 hover:text-primary hover:bg-primary/5 transition-colors"
+                  aria-label="My orders"
+                  data-testid="link-account"
+                >
+                  <User className="w-5 h-5" strokeWidth={1.5} />
+                </Link>
+                <UserButton
+                  appearance={{ elements: { avatarBox: "w-9 h-9" } }}
+                />
+              </Show>
             </div>
           </div>
         </div>

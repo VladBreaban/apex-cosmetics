@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { storage } from "../storage";
+import { requireAuth } from "../middlewares/auth";
 import { CreateCustomerBody, GetCustomerOrdersParams } from "@workspace/api-zod";
 import { randomUUID } from "crypto";
 
@@ -38,31 +39,47 @@ router.post("/customers", async (req, res): Promise<void> => {
   });
 });
 
-router.get("/customers/:email/orders", async (req, res): Promise<void> => {
-  const params = GetCustomerOrdersParams.safeParse(req.params);
-  if (!params.success) {
-    res.status(400).json({ error: params.error.message });
-    return;
-  }
+// Order history by email exposes customer PII, so it is gated to the owner
+// (the authenticated user whose email matches) or an admin.
+router.get(
+  "/customers/:email/orders",
+  requireAuth,
+  async (req, res): Promise<void> => {
+    const params = GetCustomerOrdersParams.safeParse(req.params);
+    if (!params.success) {
+      res.status(400).json({ error: params.error.message });
+      return;
+    }
 
-  const result = await storage.listOrdersByEmail(params.data.email);
+    const requester = req.localUser!;
+    const targetEmail = params.data.email.toLowerCase();
+    if (
+      requester.role !== "admin" &&
+      requester.email.toLowerCase() !== targetEmail
+    ) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
 
-  res.json({
-    data: result.data.map((order) => ({
-      ...order,
-      createdAt: order.createdAt instanceof Date ? order.createdAt.toISOString() : order.createdAt,
-      items: (order.items ?? []).map((item: any) => ({
-        id: item.id,
-        productId: item.productId,
-        productName: item.productName,
-        priceId: item.priceId ?? null,
-        unitAmount: item.unitAmount,
-        quantity: item.quantity,
-        currency: item.currency,
+    const result = await storage.listOrdersByEmail(params.data.email);
+
+    res.json({
+      data: result.data.map((order) => ({
+        ...order,
+        createdAt: order.createdAt instanceof Date ? order.createdAt.toISOString() : order.createdAt,
+        items: (order.items ?? []).map((item: any) => ({
+          id: item.id,
+          productId: item.productId,
+          productName: item.productName,
+          priceId: item.priceId ?? null,
+          unitAmount: item.unitAmount,
+          quantity: item.quantity,
+          currency: item.currency,
+        })),
       })),
-    })),
-    total: result.total,
-  });
-});
+      total: result.total,
+    });
+  },
+);
 
 export default router;

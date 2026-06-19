@@ -221,6 +221,44 @@ paths:
               schema:
                 $ref: "#/components/schemas/OrderListResponse"
 
+  /me:
+    get:
+      operationId: getMe
+      tags: [me]
+      summary: Get the current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /my-orders:
+    get:
+      operationId: getMyOrders
+      tags: [me]
+      summary: Get orders for the current authenticated user
+      responses:
+        "200":
+          description: Current user orders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /admin/stats:
     get:
       operationId: adminGetStats
@@ -750,6 +788,20 @@ components:
             $ref: "#/components/schemas/Order"
         total:
           type: integer
+
+    Me:
+      type: object
+      required: [id, email, role]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [customer, admin]
 
     CustomerInput:
       type: object

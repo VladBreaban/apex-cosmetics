@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
 import { LayoutDashboard, Package, ShoppingCart, Users, ChevronRight } from "lucide-react";
+import { UserButton } from "@clerk/react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger, SidebarGroup, SidebarGroupContent } from "@/components/ui/sidebar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbLink } from "@/components/ui/breadcrumb";
@@ -90,6 +91,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 ))}
               </BreadcrumbList>
             </Breadcrumb>
+            <div className="ml-auto flex items-center">
+              <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+            </div>
           </header>
           <ScrollArea className="flex-1">
             <div className="p-6 max-w-7xl mx-auto w-full">

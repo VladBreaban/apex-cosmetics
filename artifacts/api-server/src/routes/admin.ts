@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { storage } from "../storage";
 import { getUncachableStripeClient } from "../stripeClient";
+import { requireAdmin } from "../middlewares/auth";
 import {
   AdminListProductsQueryParams,
   AdminListPricesQueryParams,
@@ -19,6 +20,9 @@ import {
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
+
+// Every admin endpoint requires an authenticated user with the admin role.
+router.use("/admin", requireAdmin);
 
 // Stats
 router.get("/admin/stats", async (_req, res): Promise<void> => {

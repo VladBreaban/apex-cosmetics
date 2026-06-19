@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { ordersTable, orderItemsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "./lib/logger";
+import { storage } from "./storage";
 
 export class WebhookHandlers {
   static async processWebhook(
@@ -51,6 +52,14 @@ export class WebhookHandlers {
         session.customer_details?.email ?? session.customer_email ?? "";
       const customerName = session.customer_details?.name ?? null;
 
+      // Link the order to an existing user account when the buyer's email
+      // matches one (covers signed-in customers; guest checkout stays null).
+      let userId: string | null = null;
+      if (customerEmail) {
+        const existingUser = await storage.getUserByEmail(customerEmail);
+        userId = existingUser?.id ?? null;
+      }
+
       // Insert order
       const [order] = await db
         .insert(ordersTable)
@@ -60,6 +69,7 @@ export class WebhookHandlers {
             typeof session.payment_intent === "string"
               ? session.payment_intent
               : null,
+          userId,
           customerEmail,
           customerName,
           status: "paid",
