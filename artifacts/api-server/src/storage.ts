@@ -4,6 +4,7 @@ import {
   ordersTable,
   orderItemsTable,
   discountRedemptionsTable,
+  addressesTable,
 } from "@workspace/db";
 import { eq, sql, desc, count, sum, and, gte } from "drizzle-orm";
 
@@ -402,6 +403,109 @@ export class Storage {
       totalSpent: Number(stats?.totalSpent ?? 0),
       createdAt: user.createdAt.toISOString(),
     };
+  }
+
+  async updateUserName(id: string, name: string | null) {
+    const [user] = await db
+      .update(usersTable)
+      .set({ name })
+      .where(eq(usersTable.id, id))
+      .returning();
+    return user ?? null;
+  }
+
+  // Saved addresses (scoped per user)
+  async listAddressesByUser(userId: string) {
+    return db
+      .select()
+      .from(addressesTable)
+      .where(eq(addressesTable.userId, userId))
+      .orderBy(desc(addressesTable.isDefault), desc(addressesTable.createdAt));
+  }
+
+  async getAddress(id: number) {
+    const [address] = await db
+      .select()
+      .from(addressesTable)
+      .where(eq(addressesTable.id, id));
+    return address ?? null;
+  }
+
+  async createAddress(data: {
+    userId: string;
+    label?: string | null;
+    name: string;
+    address1: string;
+    address2?: string | null;
+    city: string;
+    state: string;
+    zip: string;
+    country: string;
+    isDefault?: boolean;
+  }) {
+    return db.transaction(async (tx) => {
+      if (data.isDefault) {
+        await tx
+          .update(addressesTable)
+          .set({ isDefault: false })
+          .where(eq(addressesTable.userId, data.userId));
+      }
+      const [address] = await tx
+        .insert(addressesTable)
+        .values({
+          userId: data.userId,
+          label: data.label ?? null,
+          name: data.name,
+          address1: data.address1,
+          address2: data.address2 ?? null,
+          city: data.city,
+          state: data.state,
+          zip: data.zip,
+          country: data.country,
+          isDefault: data.isDefault ?? false,
+        })
+        .returning();
+      return address;
+    });
+  }
+
+  async updateAddress(
+    id: number,
+    userId: string,
+    data: {
+      label?: string | null;
+      name?: string;
+      address1?: string;
+      address2?: string | null;
+      city?: string;
+      state?: string;
+      zip?: string;
+      country?: string;
+      isDefault?: boolean;
+    },
+  ) {
+    return db.transaction(async (tx) => {
+      if (data.isDefault) {
+        await tx
+          .update(addressesTable)
+          .set({ isDefault: false })
+          .where(eq(addressesTable.userId, userId));
+      }
+      const [address] = await tx
+        .update(addressesTable)
+        .set(data)
+        .where(and(eq(addressesTable.id, id), eq(addressesTable.userId, userId)))
+        .returning();
+      return address ?? null;
+    });
+  }
+
+  async deleteAddress(id: number, userId: string) {
+    const [address] = await db
+      .delete(addressesTable)
+      .where(and(eq(addressesTable.id, id), eq(addressesTable.userId, userId)))
+      .returning();
+    return address ?? null;
   }
 
   // Admin stats

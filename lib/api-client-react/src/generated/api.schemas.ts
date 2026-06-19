@@ -281,6 +281,53 @@ export interface Me {
   role: MeRole;
 }
 
+export interface UpdateMeInput {
+  name?: string;
+}
+
+export interface SavedAddress {
+  id: number;
+  /** @nullable */
+  label?: string | null;
+  name: string;
+  address1: string;
+  /** @nullable */
+  address2?: string | null;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+  isDefault: boolean;
+}
+
+export interface SavedAddressInput {
+  label?: string;
+  name: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+  isDefault?: boolean;
+}
+
+export interface SavedAddressUpdate {
+  label?: string;
+  name?: string;
+  address1?: string;
+  address2?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  country?: string;
+  isDefault?: boolean;
+}
+
+export interface SavedAddressListResponse {
+  data: SavedAddress[];
+}
+
 export interface CustomerInput {
   email: string;
   name?: string;

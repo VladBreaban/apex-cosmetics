@@ -1,7 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
+import { useUser } from "@clerk/react";
 import { useCart } from "@/lib/cart-context";
-import { useCreateCheckout, useGetShippingRates, ApiError } from "@workspace/api-client-react";
+import {
+  useCreateCheckout,
+  useGetShippingRates,
+  useListMyAddresses,
+  getListMyAddressesQueryKey,
+  ApiError,
+} from "@workspace/api-client-react";
 import { getProductImage } from "@/lib/image-map";
 import { motion } from "framer-motion";
 import { ArrowLeft, Truck, CheckCircle2, AlertCircle, Minus, Plus, Trash2 } from "lucide-react";
@@ -45,11 +52,55 @@ export default function Checkout() {
     useCart();
   const createCheckout = useCreateCheckout();
   const shippingRates = useGetShippingRates();
+  const { isSignedIn, user } = useUser();
+  const { data: savedAddresses } = useListMyAddresses({
+    query: {
+      queryKey: getListMyAddressesQueryKey(),
+      enabled: !!isSignedIn,
+    },
+  });
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
   const [form, setForm] = useState<ShippingForm>(EMPTY_FORM);
   const [selectedRate, setSelectedRate] = useState<string | null>(null);
+  const [prefilled, setPrefilled] = useState(false);
+
+  const addresses = savedAddresses?.data ?? [];
+
+  // Pre-fill the form once from the user's default (or first) saved address.
+  useEffect(() => {
+    if (prefilled || addresses.length === 0) return;
+    const preferred = addresses.find((a) => a.isDefault) ?? addresses[0];
+    setForm((f) => ({
+      ...f,
+      email: f.email || user?.primaryEmailAddress?.emailAddress || "",
+      name: preferred.name,
+      address1: preferred.address1,
+      address2: preferred.address2 ?? "",
+      city: preferred.city,
+      state: preferred.state,
+      zip: preferred.zip,
+      country: preferred.country,
+    }));
+    setPrefilled(true);
+  }, [addresses, prefilled, user]);
+
+  const applyAddress = (id: number) => {
+    const addr = addresses.find((a) => a.id === id);
+    if (!addr) return;
+    setForm((f) => ({
+      ...f,
+      name: addr.name,
+      address1: addr.address1,
+      address2: addr.address2 ?? "",
+      city: addr.city,
+      state: addr.state,
+      zip: addr.zip,
+      country: addr.country,
+    }));
+    setSelectedRate(null);
+  };
 
   const addressReady = isAddressComplete(form);
 
@@ -168,6 +219,51 @@ export default function Checkout() {
                   <input type="email" value={form.email} onChange={update("email")} placeholder="you@example.com" className={inputClass} />
                 </div>
               </motion.section>
+
+              {/* Saved Addresses */}
+              {addresses.length > 0 && (
+                <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.05 }}>
+                  <h2 className="font-sans font-bold uppercase tracking-[0.2em] text-[10px] mb-8 pb-4 border-b border-border/60">Saved Addresses</h2>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {addresses.map((addr) => {
+                      const active =
+                        form.address1 === addr.address1 &&
+                        form.zip === addr.zip &&
+                        form.name === addr.name;
+                      return (
+                        <button
+                          key={addr.id}
+                          type="button"
+                          onClick={() => applyAddress(addr.id)}
+                          className={`text-left border rounded-sm p-4 transition-all duration-300 ${
+                            active
+                              ? "border-primary bg-primary/5 shadow-sm"
+                              : "border-border/60 bg-white hover:border-primary/30"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            {addr.label && (
+                              <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                                {addr.label}
+                              </span>
+                            )}
+                            {addr.isDefault && (
+                              <span className="text-[8px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                                Default
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm font-medium leading-tight">{addr.name}</p>
+                          <p className="text-xs text-muted-foreground font-light mt-1">
+                            {addr.address1}
+                            {addr.address2 ? `, ${addr.address2}` : ""}, {addr.city}, {addr.state} {addr.zip}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </motion.section>
+              )}
 
               {/* Shipping Address */}
               <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}>

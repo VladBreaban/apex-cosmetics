@@ -239,6 +239,155 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateMe
+      tags: [me]
+      summary: Update the current authenticated user's profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMeInput"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /me/addresses:
+    get:
+      operationId: listMyAddresses
+      tags: [me]
+      summary: List the current user's saved addresses
+      responses:
+        "200":
+          description: Saved addresses
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedAddressListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createMyAddress
+      tags: [me]
+      summary: Add a saved address for the current user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SavedAddressInput"
+      responses:
+        "201":
+          description: Address created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedAddress"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /me/addresses/{id}:
+    patch:
+      operationId: updateMyAddress
+      tags: [me]
+      summary: Update a saved address
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SavedAddressUpdate"
+      responses:
+        "200":
+          description: Updated address
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedAddress"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteMyAddress
+      tags: [me]
+      summary: Delete a saved address
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      responses:
+        "200":
+          description: Address deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedAddress"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /my-orders:
     get:
@@ -1008,6 +1157,91 @@ components:
         role:
           type: string
           enum: [customer, admin]
+
+    UpdateMeInput:
+      type: object
+      properties:
+        name:
+          type: string
+
+    SavedAddress:
+      type: object
+      required: [id, name, address1, city, state, zip, country, isDefault]
+      properties:
+        id:
+          type: integer
+        label:
+          type: ["string", "null"]
+        name:
+          type: string
+        address1:
+          type: string
+        address2:
+          type: ["string", "null"]
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+        country:
+          type: string
+        isDefault:
+          type: boolean
+
+    SavedAddressInput:
+      type: object
+      required: [name, address1, city, state, zip, country]
+      properties:
+        label:
+          type: string
+        name:
+          type: string
+        address1:
+          type: string
+        address2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+        country:
+          type: string
+        isDefault:
+          type: boolean
+
+    SavedAddressUpdate:
+      type: object
+      properties:
+        label:
+          type: string
+        name:
+          type: string
+        address1:
+          type: string
+        address2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zip:
+          type: string
+        country:
+          type: string
+        isDefault:
+          type: boolean
+
+    SavedAddressListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/SavedAddress"
 
     CustomerInput:
       type: object

@@ -227,6 +227,110 @@ export const GetMeResponse = zod.object({
 
 
 /**
+ * @summary Update the current authenticated user's profile
+ */
+export const UpdateMeBody = zod.object({
+  "name": zod.string().optional()
+})
+
+export const UpdateMeResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "role": zod.enum(['customer', 'admin'])
+})
+
+
+/**
+ * @summary List the current user's saved addresses
+ */
+export const ListMyAddressesResponse = zod.object({
+  "data": zod.array(zod.object({
+  "id": zod.number(),
+  "label": zod.string().nullish(),
+  "name": zod.string(),
+  "address1": zod.string(),
+  "address2": zod.string().nullish(),
+  "city": zod.string(),
+  "state": zod.string(),
+  "zip": zod.string(),
+  "country": zod.string(),
+  "isDefault": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary Add a saved address for the current user
+ */
+export const CreateMyAddressBody = zod.object({
+  "label": zod.string().optional(),
+  "name": zod.string(),
+  "address1": zod.string(),
+  "address2": zod.string().optional(),
+  "city": zod.string(),
+  "state": zod.string(),
+  "zip": zod.string(),
+  "country": zod.string(),
+  "isDefault": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Update a saved address
+ */
+export const UpdateMyAddressParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateMyAddressBody = zod.object({
+  "label": zod.string().optional(),
+  "name": zod.string().optional(),
+  "address1": zod.string().optional(),
+  "address2": zod.string().optional(),
+  "city": zod.string().optional(),
+  "state": zod.string().optional(),
+  "zip": zod.string().optional(),
+  "country": zod.string().optional(),
+  "isDefault": zod.boolean().optional()
+})
+
+export const UpdateMyAddressResponse = zod.object({
+  "id": zod.number(),
+  "label": zod.string().nullish(),
+  "name": zod.string(),
+  "address1": zod.string(),
+  "address2": zod.string().nullish(),
+  "city": zod.string(),
+  "state": zod.string(),
+  "zip": zod.string(),
+  "country": zod.string(),
+  "isDefault": zod.boolean()
+})
+
+
+/**
+ * @summary Delete a saved address
+ */
+export const DeleteMyAddressParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteMyAddressResponse = zod.object({
+  "id": zod.number(),
+  "label": zod.string().nullish(),
+  "name": zod.string(),
+  "address1": zod.string(),
+  "address2": zod.string().nullish(),
+  "city": zod.string(),
+  "state": zod.string(),
+  "zip": zod.string(),
+  "country": zod.string(),
+  "isDefault": zod.boolean()
+})
+
+
+/**
  * @summary Get orders for the current authenticated user
  */
 export const GetMyOrdersResponse = zod.object({
