@@ -1,3 +1,4 @@
+- [Admin auth design](admin-auth-design.md) — admin uses custom locked-signup auth (invite code + seeded admin), NOT Clerk; never reopen signup or hardcode a default password. Storefront still uses Clerk.
 - [Clerk combined sign-in flow](clerk-combined-flow.md) — `<SignIn>` with no `signUpUrl` renders the combined flow whose title ignores `signIn.start.title`; set `withSignUp={false}` to use standard flow.
 - [Order endpoints IDOR](order-endpoints-idor.md) — public order lookups must gate numeric/email PII behind auth+ownership; only unguessable Stripe `cs_` session IDs may stay public.
 - [Discount codes](discount-codes.md) — per_customer codes need atomic reserve at checkout (unique index + ON CONFLICT), not webhook-only writes; Stripe enforces global/first_time.

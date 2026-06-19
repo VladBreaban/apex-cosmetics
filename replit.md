@@ -11,6 +11,7 @@ Copper Peptide health & beauty ecommerce store with storefront, admin panel, and
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string
 - Optional env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — for Stripe payments
+- Admin auth env: `SESSION_SECRET` (signs admin session cookie), `ADMIN_INITIAL_PASSWORD` (password for the auto-seeded `admin` user; if unset a random one is generated and logged once), `ADMIN_SIGNUP_CODE` (invite code required to create additional admin accounts; if unset, signups are disabled), optional `ADMIN_INITIAL_USERNAME` (defaults to `admin`)
 
 ## Stack
 
@@ -40,11 +41,13 @@ Copper Peptide health & beauty ecommerce store with storefront, admin panel, and
 - **Stripe initialization is non-blocking.** If `STRIPE_SECRET_KEY` is not set, the server starts in degraded mode (product endpoints return 500; other endpoints work).
 - **SQL queries for Stripe data use raw SQL** (`db.execute(sql.raw(...))`) since Drizzle ORM schemas target the `public` schema — the `stripe.*` schema tables are queried directly.
 - **WHERE clauses in CTEs must not use table aliases** defined in the outer query. Alias `p` in `FROM paginated_products p` is only available outside the CTE.
+- **Admin auth is custom (not Clerk).** The admin panel uses a dependency-free signed session cookie (`apex_admin_session`, HMAC via `SESSION_SECRET`, 7-day TTL) + scrypt password hashing, backed by the `admin_users` table. `requireAdminSession` gates `/api/admin/*` and admin discount routes. `adminAuthRouter` must be mounted BEFORE `adminRouter` so `/admin/auth/*` is not gated. **Storefront customer auth still uses Clerk** (`requireAuth` on `/me`, `/my-orders`, `/customers`) — leave it untouched.
+- **Admin signups are locked.** Once one admin exists, new accounts require the `ADMIN_SIGNUP_CODE` invite code (constant-time compared). One admin is auto-seeded on startup.
 
 ## Product
 
 - **Storefront** (`/`): Hero landing page, product catalog by category (Face / Body / Hair), product detail pages, cart, Stripe checkout
-- **Admin** (`/admin/`): Dashboard with revenue/order stats, product CRUD with pricing management, order tracking with status updates, customer directory
+- **Admin** (`/admin/`): Username/password login + invite-code signup. Dashboard with revenue/order stats, product CRUD with pricing management, order tracking with status updates, customer directory
 
 ## User preferences
 
