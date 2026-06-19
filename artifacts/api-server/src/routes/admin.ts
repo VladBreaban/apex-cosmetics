@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { storage } from "../storage";
 import { getUncachableStripeClient } from "../stripeClient";
-import { requireAdmin } from "../middlewares/auth";
+import { requireAdminSession } from "../middlewares/adminAuth";
 import {
   AdminListProductsQueryParams,
   AdminListPricesQueryParams,
@@ -22,7 +22,7 @@ import {
 const router: IRouter = Router();
 
 // Every admin endpoint requires an authenticated user with the admin role.
-router.use("/admin", requireAdmin);
+router.use("/admin", requireAdminSession);
 
 // Stats
 router.get("/admin/stats", async (_req, res): Promise<void> => {

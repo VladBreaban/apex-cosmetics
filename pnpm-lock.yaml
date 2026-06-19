@@ -172,13 +172,6 @@ importers:
         version: 5.9.3
 
   artifacts/admin:
-    dependencies:
-      '@clerk/react':
-        specifier: ^6.10.2
-        version: 6.10.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      '@clerk/themes':
-        specifier: ^2.4.57
-        version: 2.4.57(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
     devDependencies:
       '@hookform/resolvers':
         specifier: ^3.10.0

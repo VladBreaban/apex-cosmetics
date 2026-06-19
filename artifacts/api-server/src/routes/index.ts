@@ -6,6 +6,7 @@ import shippingRouter from "./shipping";
 import ordersRouter from "./orders";
 import customersRouter from "./customers";
 import adminRouter from "./admin";
+import adminAuthRouter from "./adminAuth";
 import meRouter from "./me";
 import discountsRouter from "./discounts";
 
@@ -19,6 +20,7 @@ router.use(ordersRouter);
 router.use(customersRouter);
 router.use(meRouter);
 router.use(discountsRouter);
+router.use(adminAuthRouter);
 router.use(adminRouter);
 
 export default router;

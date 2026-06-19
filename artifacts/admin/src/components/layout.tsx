@@ -1,7 +1,8 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Package, ShoppingCart, Users, Tag, ChevronRight } from "lucide-react";
-import { UserButton } from "@clerk/react";
+import { LayoutDashboard, Package, ShoppingCart, Users, Tag, LogOut } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger, SidebarGroup, SidebarGroupContent } from "@/components/ui/sidebar";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, BreadcrumbLink } from "@/components/ui/breadcrumb";
@@ -17,6 +18,7 @@ const navItems = [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const { admin, logout } = useAuth();
 
   const getBreadcrumbs = () => {
     const paths = location.split("/").filter(Boolean);
@@ -92,8 +94,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 ))}
               </BreadcrumbList>
             </Breadcrumb>
-            <div className="ml-auto flex items-center">
-              <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+            <div className="ml-auto flex items-center gap-3">
+              <span className="hidden text-sm font-medium text-muted-foreground sm:inline">
+                {admin?.username}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void logout()}
+              >
+                <LogOut className="size-4" />
+                Sign out
+              </Button>
             </div>
           </header>
           <ScrollArea className="flex-1">

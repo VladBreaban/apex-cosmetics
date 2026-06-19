@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import type Stripe from "stripe";
 import { storage } from "../storage";
 import { getUncachableStripeClient } from "../stripeClient";
-import { requireAdmin } from "../middlewares/auth";
+import { requireAdminSession } from "../middlewares/adminAuth";
 import {
   ValidateDiscountBody,
   AdminCreateDiscountBody,
@@ -140,7 +140,7 @@ router.post("/discounts/validate", async (req, res): Promise<void> => {
 });
 
 // Admin — list discount codes
-router.get("/admin/discounts", requireAdmin, async (_req, res): Promise<void> => {
+router.get("/admin/discounts", requireAdminSession, async (_req, res): Promise<void> => {
   const stripe = await getUncachableStripeClient();
   const promos = await stripe.promotionCodes.list({
     limit: 100,
@@ -152,7 +152,7 @@ router.get("/admin/discounts", requireAdmin, async (_req, res): Promise<void> =>
 // Admin — create a discount code
 router.post(
   "/admin/discounts",
-  requireAdmin,
+  requireAdminSession,
   async (req, res): Promise<void> => {
     const parsed = AdminCreateDiscountBody.safeParse(req.body);
     if (!parsed.success) {
@@ -229,7 +229,7 @@ router.post(
 // Admin — deactivate a discount code
 router.delete(
   "/admin/discounts/:id",
-  requireAdmin,
+  requireAdminSession,
   async (req, res): Promise<void> => {
     const params = AdminDeactivateDiscountParams.safeParse(req.params);
     if (!params.success) {

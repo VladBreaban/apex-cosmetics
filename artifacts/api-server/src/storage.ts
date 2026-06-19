@@ -5,6 +5,7 @@ import {
   orderItemsTable,
   discountRedemptionsTable,
   addressesTable,
+  adminUsersTable,
 } from "@workspace/db";
 import { eq, sql, desc, count, sum, and, gte } from "drizzle-orm";
 
@@ -279,6 +280,36 @@ export class Storage {
       .from(usersTable)
       .where(eq(usersTable.email, email));
     return user ?? null;
+  }
+
+  // Admin users — username/password authentication for the admin panel.
+  async getAdminUserById(id: number) {
+    const [admin] = await db
+      .select()
+      .from(adminUsersTable)
+      .where(eq(adminUsersTable.id, id));
+    return admin ?? null;
+  }
+
+  async getAdminUserByUsername(username: string) {
+    const [admin] = await db
+      .select()
+      .from(adminUsersTable)
+      .where(eq(adminUsersTable.username, username));
+    return admin ?? null;
+  }
+
+  async createAdminUser(username: string, passwordHash: string) {
+    const [admin] = await db
+      .insert(adminUsersTable)
+      .values({ username, passwordHash })
+      .returning();
+    return admin;
+  }
+
+  async countAdminUsers() {
+    const [row] = await db.select({ c: count() }).from(adminUsersTable);
+    return Number(row?.c ?? 0);
   }
 
   async getUserByClerkId(clerkUserId: string) {

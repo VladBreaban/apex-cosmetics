@@ -2,6 +2,21 @@ import { runMigrations } from "stripe-replit-sync";
 import { getStripeSync } from "./stripeClient";
 import app from "./app";
 import { logger } from "./lib/logger";
+import { storage } from "./storage";
+import { hashPassword } from "./lib/adminAuth";
+
+async function seedAdmin() {
+  const existing = await storage.countAdminUsers();
+  if (existing > 0) return;
+
+  const username = process.env.ADMIN_INITIAL_USERNAME ?? "admin";
+  const password = process.env.ADMIN_INITIAL_PASSWORD ?? "admin123";
+  await storage.createAdminUser(username, hashPassword(password));
+  logger.info(
+    { username },
+    "Seeded default admin user — change the password by signing up your own account",
+  );
+}
 
 async function initStripe() {
   const databaseUrl = process.env.DATABASE_URL;
@@ -46,6 +61,12 @@ try {
   await initStripe();
 } catch (err) {
   logger.error({ err }, "Stripe initialization failed — server will start without Stripe");
+}
+
+try {
+  await seedAdmin();
+} catch (err) {
+  logger.error({ err }, "Admin seed failed");
 }
 
 app.listen(port, (err) => {
