@@ -4,6 +4,7 @@ import {
   hashPassword,
   verifyPassword,
   signSession,
+  inviteCodeValid,
   ADMIN_COOKIE,
 } from "../lib/adminAuth";
 import { requireAdminSession } from "../middlewares/adminAuth";
@@ -38,6 +39,27 @@ router.post("/admin/auth/signup", async (req, res): Promise<void> => {
       error: "Username must be at least 3 characters and password at least 6.",
     });
     return;
+  }
+
+  // Locked sign-ups: once at least one admin exists, new accounts require a
+  // valid invite code (ADMIN_SIGNUP_CODE). The first-ever account (bootstrap)
+  // is allowed without a code.
+  const adminCount = await storage.countAdminUsers();
+  if (adminCount > 0) {
+    const code =
+      typeof (req.body as Record<string, unknown>)?.inviteCode === "string"
+        ? ((req.body as Record<string, unknown>).inviteCode as string)
+        : "";
+    if (!process.env.ADMIN_SIGNUP_CODE) {
+      res
+        .status(403)
+        .json({ error: "Sign-ups are disabled. Ask an administrator for access." });
+      return;
+    }
+    if (!inviteCodeValid(code)) {
+      res.status(403).json({ error: "Invalid invite code." });
+      return;
+    }
   }
 
   const existing = await storage.getAdminUserByUsername(creds.username);

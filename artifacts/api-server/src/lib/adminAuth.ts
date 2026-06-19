@@ -48,6 +48,16 @@ export function signSession(adminId: number): string {
   return `${payload}.${sig}`;
 }
 
+// Constant-time check of a supplied invite code against ADMIN_SIGNUP_CODE.
+// Returns false when no signup code is configured (sign-ups disabled).
+export function inviteCodeValid(code: string): boolean {
+  const expected = process.env.ADMIN_SIGNUP_CODE;
+  if (!expected) return false;
+  const a = Buffer.from(code);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 export function verifySession(token: string | undefined | null): number | null {
   if (!token) return null;
   const [payload, sig] = token.split(".");

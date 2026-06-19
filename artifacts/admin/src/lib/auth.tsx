@@ -15,7 +15,11 @@ interface AuthState {
   admin: AdminUser | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  signup: (username: string, password: string) => Promise<void>;
+  signup: (
+    username: string,
+    password: string,
+    inviteCode: string,
+  ) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -23,14 +27,13 @@ const AuthContext = createContext<AuthState | null>(null);
 
 async function authRequest(
   action: "login" | "signup",
-  username: string,
-  password: string,
+  body: Record<string, string>,
 ): Promise<AdminUser> {
   const res = await fetch(`/api/admin/auth/${action}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => null);
   if (!res.ok) {
@@ -65,11 +68,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (username: string, password: string) => {
-    setAdmin(await authRequest("login", username, password));
+    setAdmin(await authRequest("login", { username, password }));
   };
 
-  const signup = async (username: string, password: string) => {
-    setAdmin(await authRequest("signup", username, password));
+  const signup = async (
+    username: string,
+    password: string,
+    inviteCode: string,
+  ) => {
+    setAdmin(await authRequest("signup", { username, password, inviteCode }));
   };
 
   const logout = async () => {

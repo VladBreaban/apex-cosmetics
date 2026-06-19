@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -28,7 +29,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       if (isSignup) {
-        await signup(username.trim(), password);
+        await signup(username.trim(), password, inviteCode.trim());
       } else {
         await login(username.trim(), password);
       }
@@ -43,6 +44,7 @@ export default function LoginPage() {
     setMode(isSignup ? "login" : "signup");
     setError(null);
     setPassword("");
+    setInviteCode("");
   }
 
   return (
@@ -88,6 +90,21 @@ export default function LoginPage() {
                 minLength={6}
               />
             </div>
+
+            {isSignup && (
+              <div className="space-y-2">
+                <Label htmlFor="inviteCode">Invite code</Label>
+                <Input
+                  id="inviteCode"
+                  name="inviteCode"
+                  autoComplete="off"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value)}
+                  placeholder="Provided by an administrator"
+                  required
+                />
+              </div>
+            )}
 
             {error && (
               <p className="text-sm text-destructive" role="alert">

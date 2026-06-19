@@ -3,6 +3,7 @@ import { getStripeSync } from "./stripeClient";
 import app from "./app";
 import { logger } from "./lib/logger";
 import { storage } from "./storage";
+import { randomBytes } from "node:crypto";
 import { hashPassword } from "./lib/adminAuth";
 
 async function seedAdmin() {
@@ -10,12 +11,20 @@ async function seedAdmin() {
   if (existing > 0) return;
 
   const username = process.env.ADMIN_INITIAL_USERNAME ?? "admin";
-  const password = process.env.ADMIN_INITIAL_PASSWORD ?? "admin123";
+  const envPassword = process.env.ADMIN_INITIAL_PASSWORD;
+  const password = envPassword ?? randomBytes(9).toString("base64url");
   await storage.createAdminUser(username, hashPassword(password));
-  logger.info(
-    { username },
-    "Seeded default admin user — change the password by signing up your own account",
-  );
+  if (envPassword) {
+    logger.info(
+      { username },
+      "Seeded admin user using ADMIN_INITIAL_PASSWORD",
+    );
+  } else {
+    logger.warn(
+      { username, generatedPassword: password },
+      "Seeded admin with a GENERATED password (shown once). Set ADMIN_INITIAL_PASSWORD to choose your own.",
+    );
+  }
 }
 
 async function initStripe() {
