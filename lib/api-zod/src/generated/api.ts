@@ -105,7 +105,8 @@ export const CreateCheckoutBody = zod.object({
 })),
   "customerEmail": zod.string().optional(),
   "successUrl": zod.string().optional(),
-  "cancelUrl": zod.string().optional()
+  "cancelUrl": zod.string().optional(),
+  "promotionCode": zod.string().nullish().describe('Stripe promotion code id to apply to the session')
 })
 
 export const CreateCheckoutResponse = zod.object({
@@ -564,6 +565,94 @@ export const AdminGetUserResponse = zod.object({
   "totalOrders": zod.number().optional(),
   "totalSpent": zod.number().optional(),
   "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Validate a discount code against the current cart
+ */
+
+
+
+export const ValidateDiscountBody = zod.object({
+  "code": zod.string().min(1),
+  "subtotal": zod.number().describe('Current cart subtotal in cents'),
+  "email": zod.string().nullish()
+})
+
+export const ValidateDiscountResponse = zod.object({
+  "valid": zod.boolean(),
+  "code": zod.string().nullish(),
+  "promotionCodeId": zod.string().nullish(),
+  "discountType": zod.union([zod.literal('percentage'),zod.literal('fixed'),zod.literal(null)]).nullish(),
+  "amountOff": zod.number().nullish().describe('Computed discount in cents for the supplied subtotal'),
+  "description": zod.string().nullish(),
+  "reason": zod.string().nullish().describe('Human-readable reason when not valid')
+})
+
+
+/**
+ * @summary List discount codes
+ */
+export const AdminListDiscountsResponse = zod.object({
+  "data": zod.array(zod.object({
+  "id": zod.string().describe('Stripe promotion code id'),
+  "code": zod.string(),
+  "active": zod.boolean(),
+  "discountType": zod.enum(['percentage', 'fixed']),
+  "percentOff": zod.number().nullish(),
+  "amountOff": zod.number().nullish().describe('Fixed discount in the smallest currency unit (cents)'),
+  "currency": zod.string().nullish(),
+  "limitModel": zod.enum(['per_customer', 'first_time', 'global']),
+  "maxRedemptions": zod.number().nullish(),
+  "timesRedeemed": zod.number(),
+  "minimumAmount": zod.number().nullish().describe('Minimum order subtotal in cents required to use the code'),
+  "expiresAt": zod.string().nullish().describe('ISO timestamp when the code expires'),
+  "createdAt": zod.string().nullish()
+}))
+})
+
+
+/**
+ * @summary Create a discount code
+ */
+
+
+
+export const AdminCreateDiscountBody = zod.object({
+  "code": zod.string().min(1),
+  "discountType": zod.enum(['percentage', 'fixed']),
+  "percentOff": zod.number().nullish().describe('Required when discountType is percentage (1-100)'),
+  "amountOff": zod.number().nullish().describe('Required when discountType is fixed (cents)'),
+  "currency": zod.string().nullish(),
+  "limitModel": zod.enum(['per_customer', 'first_time', 'global']),
+  "maxRedemptions": zod.number().nullish(),
+  "minimumAmount": zod.number().nullish(),
+  "expiresAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Deactivate a discount code
+ */
+export const AdminDeactivateDiscountParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const AdminDeactivateDiscountResponse = zod.object({
+  "id": zod.string().describe('Stripe promotion code id'),
+  "code": zod.string(),
+  "active": zod.boolean(),
+  "discountType": zod.enum(['percentage', 'fixed']),
+  "percentOff": zod.number().nullish(),
+  "amountOff": zod.number().nullish().describe('Fixed discount in the smallest currency unit (cents)'),
+  "currency": zod.string().nullish(),
+  "limitModel": zod.enum(['per_customer', 'first_time', 'global']),
+  "maxRedemptions": zod.number().nullish(),
+  "timesRedeemed": zod.number(),
+  "minimumAmount": zod.number().nullish().describe('Minimum order subtotal in cents required to use the code'),
+  "expiresAt": zod.string().nullish().describe('ISO timestamp when the code expires'),
+  "createdAt": zod.string().nullish()
 })
 
 

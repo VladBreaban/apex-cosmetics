@@ -79,11 +79,154 @@ export interface CheckoutInput {
   customerEmail?: string;
   successUrl?: string;
   cancelUrl?: string;
+  /**
+     * Stripe promotion code id to apply to the session
+     * @nullable
+     */
+  promotionCode?: string | null;
 }
 
 export interface CheckoutResponse {
   url: string;
   sessionId: string;
+}
+
+export type DiscountDiscountType = typeof DiscountDiscountType[keyof typeof DiscountDiscountType];
+
+
+export const DiscountDiscountType = {
+  percentage: 'percentage',
+  fixed: 'fixed',
+} as const;
+
+export type DiscountLimitModel = typeof DiscountLimitModel[keyof typeof DiscountLimitModel];
+
+
+export const DiscountLimitModel = {
+  per_customer: 'per_customer',
+  first_time: 'first_time',
+  global: 'global',
+} as const;
+
+export interface Discount {
+  /** Stripe promotion code id */
+  id: string;
+  code: string;
+  active: boolean;
+  discountType: DiscountDiscountType;
+  /** @nullable */
+  percentOff?: number | null;
+  /**
+     * Fixed discount in the smallest currency unit (cents)
+     * @nullable
+     */
+  amountOff?: number | null;
+  /** @nullable */
+  currency?: string | null;
+  limitModel: DiscountLimitModel;
+  /** @nullable */
+  maxRedemptions?: number | null;
+  timesRedeemed: number;
+  /**
+     * Minimum order subtotal in cents required to use the code
+     * @nullable
+     */
+  minimumAmount?: number | null;
+  /**
+     * ISO timestamp when the code expires
+     * @nullable
+     */
+  expiresAt?: string | null;
+  /** @nullable */
+  createdAt?: string | null;
+}
+
+export type DiscountInputDiscountType = typeof DiscountInputDiscountType[keyof typeof DiscountInputDiscountType];
+
+
+export const DiscountInputDiscountType = {
+  percentage: 'percentage',
+  fixed: 'fixed',
+} as const;
+
+export type DiscountInputLimitModel = typeof DiscountInputLimitModel[keyof typeof DiscountInputLimitModel];
+
+
+export const DiscountInputLimitModel = {
+  per_customer: 'per_customer',
+  first_time: 'first_time',
+  global: 'global',
+} as const;
+
+export interface DiscountInput {
+  /** @minLength 1 */
+  code: string;
+  discountType: DiscountInputDiscountType;
+  /**
+     * Required when discountType is percentage (1-100)
+     * @nullable
+     */
+  percentOff?: number | null;
+  /**
+     * Required when discountType is fixed (cents)
+     * @nullable
+     */
+  amountOff?: number | null;
+  /** @nullable */
+  currency?: string | null;
+  limitModel: DiscountInputLimitModel;
+  /** @nullable */
+  maxRedemptions?: number | null;
+  /** @nullable */
+  minimumAmount?: number | null;
+  /** @nullable */
+  expiresAt?: string | null;
+}
+
+export interface DiscountListResponse {
+  data: Discount[];
+}
+
+export interface DiscountValidateInput {
+  /** @minLength 1 */
+  code: string;
+  /** Current cart subtotal in cents */
+  subtotal: number;
+  /** @nullable */
+  email?: string | null;
+}
+
+/**
+ * @nullable
+ */
+export type DiscountValidationResultDiscountType = typeof DiscountValidationResultDiscountType[keyof typeof DiscountValidationResultDiscountType] | null;
+
+
+export const DiscountValidationResultDiscountType = {
+  percentage: 'percentage',
+  fixed: 'fixed',
+} as const;
+
+export interface DiscountValidationResult {
+  valid: boolean;
+  /** @nullable */
+  code?: string | null;
+  /** @nullable */
+  promotionCodeId?: string | null;
+  /** @nullable */
+  discountType?: DiscountValidationResultDiscountType;
+  /**
+     * Computed discount in cents for the supplied subtotal
+     * @nullable
+     */
+  amountOff?: number | null;
+  /** @nullable */
+  description?: string | null;
+  /**
+     * Human-readable reason when not valid
+     * @nullable
+     */
+  reason?: string | null;
 }
 
 export interface OrderItem {

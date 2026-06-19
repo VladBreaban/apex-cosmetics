@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Package, ShoppingCart, Users, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Users, Tag, ChevronRight } from "lucide-react";
 import { UserButton } from "@clerk/react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger, SidebarGroup, SidebarGroupContent } from "@/components/ui/sidebar";
@@ -11,6 +11,7 @@ const navItems = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard },
   { title: "Products", href: "/products", icon: Package },
   { title: "Orders", href: "/orders", icon: ShoppingCart },
+  { title: "Discounts", href: "/discounts", icon: Tag },
   { title: "Customers", href: "/users", icon: Users },
 ];
 

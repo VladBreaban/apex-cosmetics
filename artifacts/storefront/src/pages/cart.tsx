@@ -1,12 +1,60 @@
+import { useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { Link, useLocation } from "wouter";
 import { getProductImage } from "@/lib/image-map";
-import { Minus, Plus, X, ArrowRight } from "lucide-react";
+import { Minus, Plus, X, ArrowRight, Tag, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUser } from "@clerk/react";
+import { useValidateDiscount } from "@workspace/api-client-react";
 
 export default function Cart() {
-  const { items, updateQuantity, removeItem, subtotal, itemCount } = useCart();
+  const {
+    items,
+    updateQuantity,
+    removeItem,
+    subtotal,
+    itemCount,
+    discount,
+    applyDiscount,
+    removeDiscount,
+    total,
+  } = useCart();
   const [, navigate] = useLocation();
+  const { user } = useUser();
+  const [codeInput, setCodeInput] = useState("");
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const validateDiscount = useValidateDiscount();
+
+  const handleApply = () => {
+    const code = codeInput.trim();
+    if (!code) return;
+    setCodeError(null);
+    const email = user?.primaryEmailAddress?.emailAddress;
+    validateDiscount.mutate(
+      { data: { code, subtotal, email: email || undefined } },
+      {
+        onSuccess: (result) => {
+          if (
+            result.valid &&
+            result.code &&
+            result.promotionCodeId &&
+            result.amountOff != null
+          ) {
+            applyDiscount({
+              code: result.code,
+              promotionCodeId: result.promotionCodeId,
+              amountOff: result.amountOff,
+              description: result.description ?? "",
+            });
+            setCodeInput("");
+          } else {
+            setCodeError(result.reason ?? "Invalid code");
+          }
+        },
+        onError: () => setCodeError("Unable to validate code right now"),
+      }
+    );
+  };
 
   if (items.length === 0) {
     return (
@@ -111,15 +159,76 @@ export default function Cart() {
                   <span>Subtotal ({itemCount} formulations)</span>
                   <span className="text-foreground font-medium">${(subtotal / 100).toFixed(2)}</span>
                 </div>
+                {discount && (
+                  <div className="flex justify-between text-primary">
+                    <span className="flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5" />
+                      {discount.code}
+                    </span>
+                    <span className="font-medium">−${(discount.amountOff / 100).toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-muted-foreground">
                   <span>Priority Shipping</span>
                   <span className="text-foreground font-medium">Calculated at checkout</span>
                 </div>
               </div>
 
+              {/* Discount code */}
+              <div className="mb-8">
+                {discount ? (
+                  <div className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-sm px-4 py-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Tag className="w-4 h-4 text-primary" />
+                      <span className="font-medium">{discount.code}</span>
+                      {discount.description && (
+                        <span className="text-muted-foreground text-xs">({discount.description})</span>
+                      )}
+                    </div>
+                    <button
+                      onClick={removeDiscount}
+                      className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-3">
+                      Discount Code
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={codeInput}
+                        onChange={(e) => {
+                          setCodeInput(e.target.value);
+                          setCodeError(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleApply();
+                        }}
+                        placeholder="Enter code"
+                        className="flex-1 bg-white border border-border px-4 py-3 text-sm uppercase tracking-wide focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all rounded-sm shadow-sm"
+                      />
+                      <button
+                        onClick={handleApply}
+                        disabled={validateDiscount.isPending || !codeInput.trim()}
+                        className="px-5 bg-foreground text-background text-[10px] font-bold uppercase tracking-[0.2em] rounded-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary transition-colors flex items-center justify-center"
+                      >
+                        {validateDiscount.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                      </button>
+                    </div>
+                    {codeError && (
+                      <p className="text-xs text-destructive mt-2 font-light">{codeError}</p>
+                    )}
+                  </>
+                )}
+              </div>
+
               <div className="flex justify-between items-end mb-10">
                 <span className="font-bold uppercase tracking-[0.15em] text-[10px] mb-1">Estimated Total</span>
-                <span className="text-4xl font-display font-medium tracking-tight">${(subtotal / 100).toFixed(2)}</span>
+                <span className="text-4xl font-display font-medium tracking-tight">${(total / 100).toFixed(2)}</span>
               </div>
 
               <button 

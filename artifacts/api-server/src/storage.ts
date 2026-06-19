@@ -1,5 +1,10 @@
 import { db } from "@workspace/db";
-import { usersTable, ordersTable, orderItemsTable } from "@workspace/db";
+import {
+  usersTable,
+  ordersTable,
+  orderItemsTable,
+  discountRedemptionsTable,
+} from "@workspace/db";
 import { eq, sql, desc, count, sum, and, gte } from "drizzle-orm";
 
 export class Storage {
@@ -446,6 +451,87 @@ export class Storage {
       revenueThisWeek: Number(weekStats[0]?.weekRevenue ?? 0),
       recentOrders: recentWithItems,
     };
+  }
+
+  // Discount redemptions — local tracking for strict once-per-customer codes
+  async hasCustomerRedeemed(
+    promotionCodeId: string,
+    email: string,
+  ): Promise<boolean> {
+    if (!email) return false;
+    const rows = await db
+      .select({ id: discountRedemptionsTable.id })
+      .from(discountRedemptionsTable)
+      .where(
+        and(
+          eq(discountRedemptionsTable.promotionCodeId, promotionCodeId),
+          eq(discountRedemptionsTable.email, email.toLowerCase()),
+        ),
+      )
+      .limit(1);
+    return rows.length > 0;
+  }
+
+  // Atomically reserve a once-per-customer code before creating the Stripe
+  // session. Returns false if this customer already holds a reservation (the
+  // unique index makes this race-safe across concurrent checkout attempts).
+  async reserveDiscountRedemption(values: {
+    promotionCodeId: string;
+    code: string;
+    email: string;
+    userId?: string | null;
+  }): Promise<boolean> {
+    const inserted = await db
+      .insert(discountRedemptionsTable)
+      .values({
+        promotionCodeId: values.promotionCodeId,
+        code: values.code,
+        email: values.email.toLowerCase(),
+        userId: values.userId ?? null,
+        orderId: null,
+      })
+      .onConflictDoNothing({
+        target: [
+          discountRedemptionsTable.promotionCodeId,
+          discountRedemptionsTable.email,
+        ],
+      })
+      .returning({ id: discountRedemptionsTable.id });
+    return inserted.length > 0;
+  }
+
+  // Attach the completed order to a previously reserved redemption.
+  async finalizeDiscountRedemption(values: {
+    promotionCodeId: string;
+    email: string;
+    orderId: number;
+  }): Promise<void> {
+    await db
+      .update(discountRedemptionsTable)
+      .set({ orderId: values.orderId })
+      .where(
+        and(
+          eq(discountRedemptionsTable.promotionCodeId, values.promotionCodeId),
+          eq(discountRedemptionsTable.email, values.email.toLowerCase()),
+        ),
+      );
+  }
+
+  // Release an unfinished reservation (checkout abandoned / payment failed) so
+  // the customer is not permanently locked out of the code.
+  async releaseDiscountReservation(values: {
+    promotionCodeId: string;
+    email: string;
+  }): Promise<void> {
+    await db
+      .delete(discountRedemptionsTable)
+      .where(
+        and(
+          eq(discountRedemptionsTable.promotionCodeId, values.promotionCodeId),
+          eq(discountRedemptionsTable.email, values.email.toLowerCase()),
+          sql`${discountRedemptionsTable.orderId} is null`,
+        ),
+      );
   }
 }
 

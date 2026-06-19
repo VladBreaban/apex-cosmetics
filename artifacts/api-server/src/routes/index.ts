@@ -7,6 +7,7 @@ import ordersRouter from "./orders";
 import customersRouter from "./customers";
 import adminRouter from "./admin";
 import meRouter from "./me";
+import discountsRouter from "./discounts";
 
 const router: IRouter = Router();
 
@@ -17,6 +18,7 @@ router.use(shippingRouter);
 router.use(ordersRouter);
 router.use(customersRouter);
 router.use(meRouter);
+router.use(discountsRouter);
 router.use(adminRouter);
 
 export default router;

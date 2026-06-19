@@ -10,6 +10,13 @@ export interface CartItem {
   imageKey: string | null;
 }
 
+export interface AppliedDiscount {
+  code: string;
+  promotionCodeId: string;
+  amountOff: number;
+  description: string;
+}
+
 interface CartContextType {
   items: CartItem[];
   addItem: (item: CartItem) => void;
@@ -18,6 +25,10 @@ interface CartContextType {
   clearCart: () => void;
   itemCount: number;
   subtotal: number;
+  discount: AppliedDiscount | null;
+  applyDiscount: (discount: AppliedDiscount) => void;
+  removeDiscount: () => void;
+  total: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -32,9 +43,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
+  const [discount, setDiscount] = useState<AppliedDiscount | null>(() => {
+    try {
+      const stored = localStorage.getItem("apex-discount");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
   useEffect(() => {
     localStorage.setItem("apex-cart", JSON.stringify(items));
   }, [items]);
+
+  useEffect(() => {
+    if (discount) {
+      localStorage.setItem("apex-discount", JSON.stringify(discount));
+    } else {
+      localStorage.removeItem("apex-discount");
+    }
+  }, [discount]);
 
   const addItem = (newItem: CartItem) => {
     setItems((prev) => {
@@ -64,10 +92,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  const clearCart = () => setItems([]);
+  const applyDiscount = (newDiscount: AppliedDiscount) =>
+    setDiscount(newDiscount);
+  const removeDiscount = () => setDiscount(null);
+
+  const clearCart = () => {
+    setItems([]);
+    setDiscount(null);
+  };
 
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
   const subtotal = items.reduce((sum, i) => sum + i.unitAmount * i.quantity, 0);
+  const total = Math.max(0, subtotal - (discount?.amountOff ?? 0));
 
   return (
     <CartContext.Provider
@@ -79,6 +115,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         itemCount,
         subtotal,
+        discount,
+        applyDiscount,
+        removeDiscount,
+        total,
       }}
     >
       {children}

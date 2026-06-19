@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useCart } from "@/lib/cart-context";
-import { useCreateCheckout, useGetShippingRates } from "@workspace/api-client-react";
+import { useCreateCheckout, useGetShippingRates, ApiError } from "@workspace/api-client-react";
 import { getProductImage } from "@/lib/image-map";
 import { motion } from "framer-motion";
 import { ArrowLeft, Truck, CheckCircle2, AlertCircle, Minus, Plus, Trash2 } from "lucide-react";
@@ -41,7 +41,8 @@ function isAddressComplete(form: ShippingForm) {
 }
 
 export default function Checkout() {
-  const { items, subtotal, itemCount, updateQuantity, removeItem } = useCart();
+  const { items, subtotal, itemCount, updateQuantity, removeItem, discount } =
+    useCart();
   const createCheckout = useCreateCheckout();
   const shippingRates = useGetShippingRates();
   const [, navigate] = useLocation();
@@ -86,7 +87,8 @@ export default function Checkout() {
   );
 
   const shippingCents = selectedRateObj?.amountCents ?? 0;
-  const totalCents = subtotal + shippingCents;
+  const discountCents = discount?.amountOff ?? 0;
+  const totalCents = Math.max(0, subtotal - discountCents) + shippingCents;
 
   const update = (field: keyof ShippingForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [field]: e.target.value }));
@@ -100,14 +102,21 @@ export default function Checkout() {
         data: {
           items: items.map((i) => ({ priceId: i.priceId, quantity: i.quantity })),
           customerEmail: form.email || undefined,
+          promotionCode: discount?.promotionCodeId || undefined,
           successUrl: `${currentUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl: `${currentUrl}/checkout/cancel`,
         },
       },
       {
         onSuccess: (data) => { window.location.href = data.url; },
-        onError: () => {
-          toast({ title: "Checkout failed", description: "Unable to initiate payment. Please try again.", variant: "destructive" });
+        onError: (error) => {
+          const serverMessage =
+            error instanceof ApiError &&
+            error.data &&
+            typeof (error.data as { error?: unknown }).error === "string"
+              ? (error.data as { error: string }).error
+              : "Unable to initiate payment. Please try again.";
+          toast({ title: "Checkout failed", description: serverMessage, variant: "destructive" });
         },
       }
     );
@@ -336,6 +345,12 @@ export default function Checkout() {
                     <span>Subtotal</span>
                     <span className="text-foreground font-medium">${(subtotal / 100).toFixed(2)}</span>
                   </div>
+                  {discount && (
+                    <div className="flex justify-between text-primary">
+                      <span>Discount ({discount.code})</span>
+                      <span className="font-medium">−${(discount.amountOff / 100).toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-muted-foreground">
                     <span>Shipping</span>
                     <span className="text-foreground font-medium">

@@ -572,6 +572,92 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /discounts/validate:
+    post:
+      operationId: validateDiscount
+      tags: [discounts]
+      summary: Validate a discount code against the current cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiscountValidateInput"
+      responses:
+        "200":
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscountValidationResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/discounts:
+    get:
+      operationId: adminListDiscounts
+      tags: [admin]
+      summary: List discount codes
+      responses:
+        "200":
+          description: Discount codes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiscountListResponse"
+    post:
+      operationId: adminCreateDiscount
+      tags: [admin]
+      summary: Create a discount code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiscountInput"
+      responses:
+        "201":
+          description: Created discount
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Discount"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/discounts/{id}:
+    delete:
+      operationId: adminDeactivateDiscount
+      tags: [admin]
+      summary: Deactivate a discount code
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: Deactivated discount
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Discount"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -706,6 +792,9 @@ components:
           type: string
         cancelUrl:
           type: string
+        promotionCode:
+          type: ["string", "null"]
+          description: Stripe promotion code id to apply to the session
 
     CartItem:
       type: object
@@ -724,6 +813,123 @@ components:
           type: string
         sessionId:
           type: string
+
+    Discount:
+      type: object
+      required:
+        [
+          id,
+          code,
+          active,
+          discountType,
+          limitModel,
+          timesRedeemed,
+        ]
+      properties:
+        id:
+          type: string
+          description: Stripe promotion code id
+        code:
+          type: string
+        active:
+          type: boolean
+        discountType:
+          type: string
+          enum: [percentage, fixed]
+        percentOff:
+          type: ["number", "null"]
+        amountOff:
+          type: ["integer", "null"]
+          description: Fixed discount in the smallest currency unit (cents)
+        currency:
+          type: ["string", "null"]
+        limitModel:
+          type: string
+          enum: [per_customer, first_time, global]
+        maxRedemptions:
+          type: ["integer", "null"]
+        timesRedeemed:
+          type: integer
+        minimumAmount:
+          type: ["integer", "null"]
+          description: Minimum order subtotal in cents required to use the code
+        expiresAt:
+          type: ["string", "null"]
+          description: ISO timestamp when the code expires
+        createdAt:
+          type: ["string", "null"]
+
+    DiscountInput:
+      type: object
+      required: [code, discountType, limitModel]
+      properties:
+        code:
+          type: string
+          minLength: 1
+        discountType:
+          type: string
+          enum: [percentage, fixed]
+        percentOff:
+          type: ["number", "null"]
+          description: Required when discountType is percentage (1-100)
+        amountOff:
+          type: ["integer", "null"]
+          description: Required when discountType is fixed (cents)
+        currency:
+          type: ["string", "null"]
+        limitModel:
+          type: string
+          enum: [per_customer, first_time, global]
+        maxRedemptions:
+          type: ["integer", "null"]
+        minimumAmount:
+          type: ["integer", "null"]
+        expiresAt:
+          type: ["string", "null"]
+
+    DiscountListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Discount"
+
+    DiscountValidateInput:
+      type: object
+      required: [code, subtotal]
+      properties:
+        code:
+          type: string
+          minLength: 1
+        subtotal:
+          type: integer
+          description: Current cart subtotal in cents
+        email:
+          type: ["string", "null"]
+
+    DiscountValidationResult:
+      type: object
+      required: [valid]
+      properties:
+        valid:
+          type: boolean
+        code:
+          type: ["string", "null"]
+        promotionCodeId:
+          type: ["string", "null"]
+        discountType:
+          type: ["string", "null"]
+          enum: [percentage, fixed, null]
+        amountOff:
+          type: ["integer", "null"]
+          description: Computed discount in cents for the supplied subtotal
+        description:
+          type: ["string", "null"]
+        reason:
+          type: ["string", "null"]
+          description: Human-readable reason when not valid
 
     OrderItem:
       type: object

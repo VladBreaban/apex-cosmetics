@@ -12,4 +12,9 @@ export interface CheckoutInput {
   customerEmail?: string;
   successUrl?: string;
   cancelUrl?: string;
+  /**
+     * Stripe promotion code id to apply to the session
+     * @nullable
+     */
+  promotionCode?: string | null;
 }

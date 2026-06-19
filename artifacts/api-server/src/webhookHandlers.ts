@@ -29,6 +29,11 @@ export class WebhookHandlers {
       const event = JSON.parse(payload.toString());
       if (event.type === "checkout.session.completed") {
         await WebhookHandlers.handleCheckoutCompleted(event.data.object);
+      } else if (
+        event.type === "checkout.session.expired" ||
+        event.type === "checkout.session.async_payment_failed"
+      ) {
+        await WebhookHandlers.handleCheckoutAbandoned(event.data.object);
       }
     } catch (err) {
       logger.warn({ err }, "Failed to parse webhook event for order creation");
@@ -96,9 +101,48 @@ export class WebhookHandlers {
         });
       }
 
+      // Finalize the strict once-per-customer reservation made at checkout by
+      // attaching the completed order. Other limit models are enforced by Stripe
+      // and are not tracked locally.
+      const promotionCodeId = session.metadata?.promotionCodeId;
+      if (
+        promotionCodeId &&
+        customerEmail &&
+        session.metadata?.limitModel === "per_customer"
+      ) {
+        try {
+          await storage.finalizeDiscountRedemption({
+            promotionCodeId,
+            email: customerEmail,
+            orderId: order.id,
+          });
+        } catch (err) {
+          logger.warn({ err }, "Failed to finalize discount redemption");
+        }
+      }
+
       logger.info({ orderId: order.id, sessionId: session.id }, "Order created from checkout");
     } catch (err) {
       logger.error({ err }, "Failed to create order from checkout session");
+    }
+  }
+
+  // Release the per-customer reservation when a checkout is abandoned (expired)
+  // or its async payment fails, so the customer is not locked out of the code.
+  static async handleCheckoutAbandoned(session: any): Promise<void> {
+    const promotionCodeId = session.metadata?.promotionCodeId;
+    const email =
+      session.customer_details?.email ?? session.customer_email ?? "";
+    if (
+      promotionCodeId &&
+      email &&
+      session.metadata?.limitModel === "per_customer"
+    ) {
+      try {
+        await storage.releaseDiscountReservation({ promotionCodeId, email });
+      } catch (err) {
+        logger.warn({ err }, "Failed to release discount reservation");
+      }
     }
   }
 }
