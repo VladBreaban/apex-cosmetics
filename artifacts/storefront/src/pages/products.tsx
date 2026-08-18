@@ -12,7 +12,18 @@ export default function Products() {
   const searchParams = new URLSearchParams(searchString);
   const categoryParam = searchParams.get("category") || undefined;
 
-  const { data: productsData, isLoading } = useListProducts({ category: categoryParam });
+  // URL slugs use friendly names; products are stored under these categories.
+  const CATEGORY_SLUG_MAP: Record<string, string> = {
+    facial: "skincare",
+    body: "bodycare",
+    hair: "haircare",
+    bundle: "bundles",
+  };
+  const apiCategory = categoryParam
+    ? (CATEGORY_SLUG_MAP[categoryParam.toLowerCase()] ?? categoryParam)
+    : undefined;
+
+  const { data: productsData, isLoading } = useListProducts({ category: apiCategory });
   const { addItem } = useCart();
   const [, navigate] = useLocation();
 
