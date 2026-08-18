@@ -13,6 +13,8 @@ const PRODUCTS = [
   { id: "prod_apex_008", name: "Hair Care Bundle", description: "Complete copper peptide hair system. Includes Hair Serum + Conditioner for maximum results.", category: "bundles", imageKey: "Apex-Hair-Care-Web_1781426371739.png", featured: false, unitAmount: 8600 },
   { id: "prod_apex_009", name: "Body Bundle", description: "Full-body copper peptide care. Includes Body Wash + Body Lotion for a daily routine that transforms your skin.", category: "bundles", imageKey: "Apex-Body-Bundle-Web_1781426371738.png", featured: false, unitAmount: 5800 },
   { id: "prod_apex_010", name: "Essential Bundle", description: "The ultimate Apex Health starter kit. Includes Facial Serum, Facial Cleanser, Hair Serum, and Body Lotion. Best value.", category: "bundles", imageKey: "Apex-Essential-Bundle-Web_1781426371738.png", featured: true, unitAmount: 15800 },
+  { id: "prod_apex_011", name: "Copper Peptide Shampoo", description: "A nourishing copper peptide shampoo that gently cleanses while supporting stronger, fuller-looking hair. 8 FL OZ.", category: "haircare", imageKey: "Apex-Shampoo-Web.png", featured: false, unitAmount: 3800 },
+  { id: "prod_apex_012", name: "Copper Peptide Tallow Balm", description: "A deeply moisturizing whipped tallow balm enriched with copper peptides. Restores dry, sensitive skin. 4 OZ.", category: "skincare", imageKey: "Apex-Tallow-Web.png", featured: false, unitAmount: 4800 },
 ];
 
 async function seed() {

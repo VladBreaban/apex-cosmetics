@@ -91,6 +91,24 @@ const PRODUCTS = [
     imageKey: "Apex-Essential-Bundle-Web_1781426371738.png",
     featured: true,
   },
+  {
+    name: "Copper Peptide Shampoo",
+    description:
+      "A nourishing copper peptide shampoo that gently cleanses while supporting stronger, fuller-looking hair. 8 FL OZ.",
+    unitAmount: 3800,
+    category: "haircare",
+    imageKey: "Apex-Shampoo-Web.png",
+    featured: false,
+  },
+  {
+    name: "Copper Peptide Tallow Balm",
+    description:
+      "A deeply moisturizing whipped tallow balm enriched with copper peptides. Restores dry, sensitive skin. 4 OZ.",
+    unitAmount: 4800,
+    category: "skincare",
+    imageKey: "Apex-Tallow-Web.png",
+    featured: false,
+  },
 ];
 
 async function seedProducts() {

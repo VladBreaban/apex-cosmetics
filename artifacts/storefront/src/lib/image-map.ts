@@ -8,6 +8,8 @@ import bodyBundle from "@assets/Apex-Body-Bundle-Web_1781426371738.png";
 import hairSerum from "@assets/Apex-Hair-Serum-Web_1781426371739.png";
 import lotion from "@assets/Apex-Lotion-Web_1781426371739.png";
 import hairCare from "@assets/Apex-Hair-Care-Web_1781426371739.png";
+import shampoo from "@assets/Apex-Shampoo-Web.png";
+import tallow from "@assets/Apex-Tallow-Web.png";
 
 export function getProductImage(name: string): string {
   const n = name.toLowerCase();
@@ -21,5 +23,7 @@ export function getProductImage(name: string): string {
   if (n.includes("hair serum")) return hairSerum;
   if (n.includes("lotion")) return lotion;
   if (n.includes("hair care")) return hairCare;
+  if (n.includes("shampoo")) return shampoo;
+  if (n.includes("tallow")) return tallow;
   return serum; // fallback
 }
