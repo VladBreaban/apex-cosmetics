@@ -9,8 +9,10 @@ Copper Peptide health & beauty ecommerce store with storefront, admin panel, and
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
-- Optional env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — for Stripe payments
+- Required env: `DATABASE_URL` — Postgres connection string; `CLERK_SECRET_KEY` — `clerkMiddleware` is mounted globally and throws on **every** request (health checks included) when this is missing
+- Optional env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — for Stripe payments. Outside Replit these are the only source of Stripe credentials; on Replit they fall back to the connector integration
+- Deployment env: `PUBLIC_BASE_URL` — public origin (e.g. `https://apex-cosmetics.com`), used for Stripe checkout success/cancel URLs and webhook registration. Replaces `REPLIT_DOMAINS` off-Replit
+- Optional env: `STOREFRONT_DIST` / `ADMIN_DIST` — override where the API server looks for the built SPAs
 - Admin auth env: `SESSION_SECRET` (signs admin session cookie), `ADMIN_INITIAL_PASSWORD` (password for the auto-seeded `admin` user; if unset a random one is generated and logged once), `ADMIN_SIGNUP_CODE` (invite code required to create additional admin accounts; if unset, signups are disabled), optional `ADMIN_INITIAL_USERNAME` (defaults to `admin`)
 
 ## Stack
@@ -38,7 +40,9 @@ Copper Peptide health & beauty ecommerce store with storefront, admin panel, and
 
 - **Products live in Stripe, not a custom table.** `stripe-replit-sync` mirrors Stripe products/prices into a `stripe.*` schema in Postgres. The API reads from there and syncs via webhooks.
 - **Orders live in Postgres** (`orders` + `order_items` tables), created on Stripe checkout webhook confirmation.
-- **Stripe initialization is non-blocking.** If `STRIPE_SECRET_KEY` is not set, the server starts in degraded mode (product endpoints return 500; other endpoints work).
+- **Stripe initialization is non-blocking.** If Stripe credentials are not set, the server starts in degraded mode (product endpoints return 500; other endpoints work).
+- **Stripe credentials resolve from env first, Replit connector second** (`stripeClient.ts`). `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` win when present; otherwise the Replit connectors API is used, so the project still runs unchanged on Replit.
+- **The API server serves both SPAs** (`middlewares/staticSpa.ts`): storefront at `/`, admin at `/admin/`. Single-origin is mandatory — the API client uses relative `/api` paths, the admin cookie is SameSite=Lax, and Clerk's Frontend API is proxied at `/api/__clerk`. Splitting the SPAs onto another hostname breaks admin auth and Clerk.
 - **SQL queries for Stripe data use raw SQL** (`db.execute(sql.raw(...))`) since Drizzle ORM schemas target the `public` schema — the `stripe.*` schema tables are queried directly.
 - **WHERE clauses in CTEs must not use table aliases** defined in the outer query. Alias `p` in `FROM paginated_products p` is only available outside the CTE.
 - **Admin auth is custom (not Clerk).** The admin panel uses a dependency-free signed session cookie (`apex_admin_session`, HMAC via `SESSION_SECRET`, 7-day TTL) + scrypt password hashing, backed by the `admin_users` table. `requireAdminSession` gates `/api/admin/*` and admin discount routes. `adminAuthRouter` must be mounted BEFORE `adminRouter` so `/admin/auth/*` is not gated. **Storefront customer auth still uses Clerk** (`requireAuth` on `/me`, `/my-orders`, `/customers`) — leave it untouched.

@@ -1,0 +1,158 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which component to deploy
+        type: choice
+        options: [api, frontend, both]
+        default: both
+
+# Auto-deploy on push is opt-in per component, so nothing ships to a resource
+# that does not exist yet. Enable by setting repository variables (Settings ->
+# Secrets and variables -> Actions -> Variables):
+#   DEPLOY_API=true        once the App Service + its publish profile exist
+#   DEPLOY_FRONTEND=true   once the Static Web App + its token exist
+# Until then, deploy on demand with "Run workflow" and pick a target.
+
+env:
+  # attached_assets/Web_Images-*.zip is an LFS pointer whose object was never
+  # uploaded to GitHub, so any checkout that runs the smudge filter fails with
+  # a 404. Skip it — nothing in the app references that file.
+  GIT_LFS_SKIP_SMUDGE: 1
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10.33.0'
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Storefront + admin -> one Static Web App.
+  #
+  # Both SPAs are served from a single origin: the storefront at /, the admin
+  # bundle nested under /admin/. This is not cosmetic — the admin session cookie
+  # is SameSite=Lax, the API client uses relative /api paths, and Clerk's
+  # Frontend API is proxied through the API server at /api/__clerk. All three
+  # break if the SPAs and the API sit on different hostnames, so the SWA must
+  # also have the API App Service attached as a linked backend.
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Build and deploy frontends
+    runs-on: ubuntu-latest
+    if: >-
+      (github.event_name == 'workflow_dispatch'
+        && contains(fromJSON('["frontend","both"]'), inputs.target))
+      || (github.event_name == 'push' && vars.DEPLOY_FRONTEND == 'true')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace libs
+        run: pnpm run typecheck:libs
+
+      - name: Build storefront
+        env:
+          NODE_ENV: production
+          PORT: '5173'
+          BASE_PATH: /
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+          VITE_CLERK_PROXY_URL: ${{ secrets.VITE_CLERK_PROXY_URL }}
+        run: pnpm --filter @workspace/storefront run build
+
+      - name: Build admin
+        env:
+          NODE_ENV: production
+          PORT: '5174'
+          BASE_PATH: /admin/
+        run: pnpm --filter @workspace/admin run build
+
+      - name: Nest admin bundle under /admin
+        run: |
+          set -euo pipefail
+          cp -r artifacts/admin/dist/public artifacts/storefront/dist/public/admin
+          test -f artifacts/storefront/dist/public/index.html
+          test -f artifacts/storefront/dist/public/admin/index.html
+          test -f artifacts/storefront/dist/public/staticwebapp.config.json
+
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: artifacts/storefront/dist/public
+          skip_app_build: true
+          skip_api_build: true
+
+  # ---------------------------------------------------------------------------
+  # Express API -> App Service (Linux, Node).
+  #
+  # esbuild produces a self-contained ESM bundle, so the deployed package needs
+  # no node_modules — just dist/ plus a package.json carrying the start script.
+  # ---------------------------------------------------------------------------
+  api:
+    name: Build and deploy API
+    runs-on: ubuntu-latest
+    if: >-
+      (github.event_name == 'workflow_dispatch'
+        && contains(fromJSON('["api","both"]'), inputs.target))
+      || (github.event_name == 'push' && vars.DEPLOY_API == 'true')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Build API bundle
+        run: pnpm --filter @workspace/api-server run build
+
+      - name: Assemble deploy package
+        run: |
+          set -euo pipefail
+          mkdir -p deploy
+          cp -r artifacts/api-server/dist/. deploy/
+          cat > deploy/package.json <<'JSON'
+          {
+            "name": "apex-cosmetics-api",
+            "private": true,
+            "type": "module",
+            "scripts": {
+              "start": "node --enable-source-maps index.mjs"
+            }
+          }
+          JSON
+          test -f deploy/index.mjs
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: apex-cosmetics-prod-api
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: deploy

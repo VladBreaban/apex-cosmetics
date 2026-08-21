@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import type Stripe from "stripe";
 import { getUncachableStripeClient } from "../stripeClient";
+import { getBaseUrlForRequest } from "../lib/publicUrl";
 import { storage } from "../storage";
 import { CreateCheckoutBody } from "@workspace/api-zod";
 
@@ -23,11 +24,7 @@ router.post("/checkout", async (req, res): Promise<void> => {
 
   const stripe = await getUncachableStripeClient();
 
-  const host =
-    process.env.REPLIT_DOMAINS?.split(",")[0] ??
-    req.get("host") ??
-    "localhost";
-  const baseUrl = `https://${host}`;
+  const baseUrl = getBaseUrlForRequest(req);
 
   // Resolve and re-validate any applied promotion code server-side.
   const metadata: Record<string, string> = {

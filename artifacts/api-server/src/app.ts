@@ -12,8 +12,13 @@ import {
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { WebhookHandlers } from "./webhookHandlers";
+import { mountSpas } from "./middlewares/staticSpa";
 
 const app: Express = express();
+
+// TLS is terminated upstream (Azure Container Apps ingress, Replit router),
+// so trust the proxy hop for req.protocol / req.ip and x-forwarded-* handling.
+app.set("trust proxy", 1);
 
 // Stripe webhook MUST be registered before express.json() — it needs raw Buffer
 app.post(
@@ -86,5 +91,8 @@ app.use(
 );
 
 app.use("/api", router);
+
+// Static SPAs come last so /api always wins.
+mountSpas(app);
 
 export default app;

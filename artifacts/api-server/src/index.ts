@@ -5,6 +5,7 @@ import { logger } from "./lib/logger";
 import { storage } from "./storage";
 import { randomBytes } from "node:crypto";
 import { hashPassword } from "./lib/adminAuth";
+import { getConfiguredBaseUrl } from "./lib/publicUrl";
 
 async function seedAdmin() {
   const existing = await storage.countAdminUsers();
@@ -39,14 +40,17 @@ async function initStripe() {
 
   const stripeSync = await getStripeSync();
 
-  const domains = process.env.REPLIT_DOMAINS?.split(",")[0];
-  if (domains) {
-    const webhookUrl = `https://${domains}/api/stripe/webhook`;
+  const baseUrl = getConfiguredBaseUrl();
+  if (baseUrl) {
+    const webhookUrl = `${baseUrl}/api/stripe/webhook`;
     logger.info({ webhookUrl }, "Setting up managed webhook");
     await stripeSync.findOrCreateManagedWebhook(webhookUrl);
     logger.info("Webhook configured");
   } else {
-    logger.warn("REPLIT_DOMAINS not set — skipping webhook registration");
+    logger.warn(
+      "PUBLIC_BASE_URL not set — skipping webhook registration. Register the " +
+        "Stripe webhook manually against <public origin>/api/stripe/webhook.",
+    );
   }
 
   logger.info("Starting Stripe data backfill...");

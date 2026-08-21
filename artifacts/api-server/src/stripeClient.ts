@@ -1,10 +1,36 @@
 import Stripe from "stripe";
 import { StripeSync } from "stripe-replit-sync";
 
-async function getStripeCredentials(): Promise<{
+type StripeCredentials = {
   secretKey: string;
   webhookSecret?: string;
-}> {
+};
+
+/**
+ * Read Stripe credentials from the environment.
+ *
+ * This is the path used everywhere outside Replit (Azure Container Apps,
+ * local dev, CI). Returns null when STRIPE_SECRET_KEY is unset so the caller
+ * can fall back to the Replit connector.
+ */
+function credentialsFromEnv(): StripeCredentials | null {
+  const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
+  if (!secretKey) return null;
+
+  return {
+    secretKey,
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET?.trim() || undefined,
+  };
+}
+
+/**
+ * Read Stripe credentials from the Replit connectors API.
+ *
+ * Only usable inside a Replit repl/deployment, where REPLIT_CONNECTORS_HOSTNAME
+ * and an identity token are injected. Kept so the project still runs on Replit
+ * unchanged; env vars take precedence when both are available.
+ */
+async function credentialsFromReplitConnector(): Promise<StripeCredentials> {
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? "repl " + process.env.REPL_IDENTITY
@@ -14,8 +40,9 @@ async function getStripeCredentials(): Promise<{
 
   if (!hostname || !xReplitToken) {
     throw new Error(
-      "Missing Replit environment variables. " +
-        "Ensure the Stripe integration is connected via the Integrations tab.",
+      "Stripe is not configured. Set STRIPE_SECRET_KEY (and optionally " +
+        "STRIPE_WEBHOOK_SECRET), or run inside Replit with the Stripe " +
+        "integration connected via the Integrations tab.",
     );
   }
 
@@ -33,7 +60,11 @@ async function getStripeCredentials(): Promise<{
     );
   }
 
-  const data = await resp.json() as { items?: Array<{ settings?: { secret_key?: string; webhook_secret?: string } }> };
+  const data = (await resp.json()) as {
+    items?: Array<{
+      settings?: { secret_key?: string; webhook_secret?: string };
+    }>;
+  };
   const settings = data.items?.[0]?.settings;
 
   if (!settings?.secret_key) {
@@ -47,6 +78,10 @@ async function getStripeCredentials(): Promise<{
     secretKey: settings.secret_key,
     webhookSecret: settings.webhook_secret,
   };
+}
+
+async function getStripeCredentials(): Promise<StripeCredentials> {
+  return credentialsFromEnv() ?? (await credentialsFromReplitConnector());
 }
 
 export async function getUncachableStripeClient(): Promise<Stripe> {
