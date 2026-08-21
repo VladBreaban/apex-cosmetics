@@ -360,7 +360,16 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  // credentials defaults to "same-origin", which silently drops the session
+  // cookie when the SPA and API are on different hostnames (Static Web Apps +
+  // App Service). Always include it; the server restricts who may send
+  // credentialed requests via its CORS allowlist.
+  const response = await fetch(input, {
+    credentials: "include",
+    ...init,
+    method,
+    headers,
+  });
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);

@@ -63,7 +63,33 @@ app.use(
   }),
 );
 
-app.use(cors({ credentials: true, origin: true }));
+// Cross-origin deployments (SPAs on Static Web Apps, API on App Service) send
+// credentialed requests, so the allowlist must be explicit: reflecting any
+// origin while cookies are SameSite=None would let any site call this API as a
+// signed-in user. CORS_ALLOWED_ORIGINS is a comma-separated list of origins.
+// With none configured we fall back to reflecting the request origin, which is
+// only safe because that pairs with SameSite=Lax cookies (see lib/cookieConfig).
+const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? "")
+  .split(",")
+  .map((o) => o.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+
+app.use(
+  cors({
+    credentials: true,
+    origin(origin, callback) {
+      // Same-origin and server-to-server requests carry no Origin header.
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.length === 0) return callback(null, true);
+      if (allowedOrigins.includes(origin.replace(/\/+$/, ""))) {
+        return callback(null, true);
+      }
+      // Reject by declining the origin rather than erroring, so the browser
+      // gets a clean CORS failure instead of a 500.
+      return callback(null, false);
+    },
+  }),
+);
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

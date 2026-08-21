@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { apiUrl } from "./api-base";
 
 export interface CustomerUser {
   id: string;
@@ -32,7 +33,7 @@ async function authRequest(
   action: "login" | "signup",
   body: Record<string, string | undefined>,
 ): Promise<CustomerUser> {
-  const res = await fetch(`/api/auth/${action}`, {
+  const res = await fetch(apiUrl(`/api/auth/${action}`), {
     method: "POST",
     headers: { "content-type": "application/json" },
     credentials: "include",
@@ -66,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/auth/session", { credentials: "include" })
+    fetch(apiUrl("/api/auth/session"), { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (active) setUser((d as CustomerUser | null) ?? null);
@@ -94,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
-    await fetch("/api/auth/logout", {
+    await fetch(apiUrl("/api/auth/logout"), {
       method: "POST",
       credentials: "include",
     }).catch(() => {});

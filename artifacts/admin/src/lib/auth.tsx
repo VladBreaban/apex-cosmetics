@@ -5,6 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { apiUrl } from "./api-base";
 
 export interface AdminUser {
   id: number;
@@ -29,7 +30,7 @@ async function authRequest(
   action: "login" | "signup",
   body: Record<string, string>,
 ): Promise<AdminUser> {
-  const res = await fetch(`/api/admin/auth/${action}`, {
+  const res = await fetch(apiUrl(`/api/admin/auth/${action}`), {
     method: "POST",
     headers: { "content-type": "application/json" },
     credentials: "include",
@@ -51,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/admin/auth/session", { credentials: "include" })
+    fetch(apiUrl("/api/admin/auth/session"), { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (active) setAdmin(d as AdminUser | null);
@@ -80,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await fetch("/api/admin/auth/logout", {
+    await fetch(apiUrl("/api/admin/auth/logout"), {
       method: "POST",
       credentials: "include",
     }).catch(() => {});

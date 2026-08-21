@@ -1,4 +1,4 @@
-import { Router, type IRouter, type CookieOptions } from "express";
+import { Router, type IRouter } from "express";
 import { storage } from "../storage";
 import {
   hashPassword,
@@ -8,18 +8,11 @@ import {
   ADMIN_COOKIE,
 } from "../lib/adminAuth";
 import { requireAdminSession } from "../middlewares/adminAuth";
+import { sessionCookieOptions } from "../lib/cookieConfig";
 
 const router: IRouter = Router();
 
-const isProd = process.env.NODE_ENV === "production";
-
-const cookieOptions: CookieOptions = {
-  httpOnly: true,
-  secure: isProd,
-  sameSite: "lax",
-  path: "/",
-  maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-};
+const cookieOptions = sessionCookieOptions(1000 * 60 * 60 * 24 * 7); // 7 days
 
 function parseCredentials(
   body: unknown,

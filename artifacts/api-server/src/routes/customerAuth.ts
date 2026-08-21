@@ -1,4 +1,4 @@
-import { Router, type IRouter, type CookieOptions } from "express";
+import { Router, type IRouter } from "express";
 import { randomUUID } from "node:crypto";
 import { storage } from "../storage";
 import {
@@ -8,19 +8,12 @@ import {
   CUSTOMER_COOKIE,
 } from "../lib/customerAuth";
 import { requireAuth } from "../middlewares/auth";
+import { sessionCookieOptions } from "../lib/cookieConfig";
 import type { User } from "@workspace/db";
 
 const router: IRouter = Router();
 
-const isProd = process.env.NODE_ENV === "production";
-
-const cookieOptions: CookieOptions = {
-  httpOnly: true,
-  secure: isProd,
-  sameSite: "lax",
-  path: "/",
-  maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
-};
+const cookieOptions = sessionCookieOptions(1000 * 60 * 60 * 24 * 30); // 30 days
 
 const MIN_PASSWORD = 8;
 const MAX_PASSWORD = 200;
