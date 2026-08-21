@@ -4,7 +4,7 @@ import { Link, useLocation } from "wouter";
 import { getProductImage } from "@/lib/image-map";
 import { Minus, Plus, X, ArrowRight, Tag, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useUser } from "@clerk/react";
+import { useAuth } from "@/lib/auth";
 import { useValidateDiscount } from "@workspace/api-client-react";
 
 export default function Cart() {
@@ -20,7 +20,7 @@ export default function Cart() {
     total,
   } = useCart();
   const [, navigate] = useLocation();
-  const { user } = useUser();
+  const { user } = useAuth();
   const [codeInput, setCodeInput] = useState("");
   const [codeError, setCodeError] = useState<string | null>(null);
   const validateDiscount = useValidateDiscount();
@@ -29,7 +29,7 @@ export default function Cart() {
     const code = codeInput.trim();
     if (!code) return;
     setCodeError(null);
-    const email = user?.primaryEmailAddress?.emailAddress;
+    const email = user?.email;
     validateDiscount.mutate(
       { data: { code, subtotal, email: email || undefined } },
       {

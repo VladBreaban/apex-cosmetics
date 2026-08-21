@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Show, useUser } from "@clerk/react";
+import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetMyOrders,
@@ -711,7 +711,7 @@ function OrdersList() {
 }
 
 function AccountDashboard() {
-  const { user } = useUser();
+  const { user } = useAuth();
 
   return (
     <div className="container mx-auto px-4 lg:px-12 pt-40 pb-32 max-w-4xl">
@@ -722,9 +722,9 @@ function AccountDashboard() {
         <h1 className="font-display text-5xl md:text-6xl text-foreground tracking-tight">
           My Account
         </h1>
-        {user?.primaryEmailAddress?.emailAddress && (
+        {user?.email && (
           <p className="text-muted-foreground font-light mt-4">
-            Signed in as {user.primaryEmailAddress.emailAddress}
+            Signed in as {user.email}
           </p>
         )}
       </div>
@@ -761,14 +761,11 @@ function SignedOutPrompt() {
 }
 
 export default function Account() {
-  return (
-    <>
-      <Show when="signed-in">
-        <AccountDashboard />
-      </Show>
-      <Show when="signed-out">
-        <SignedOutPrompt />
-      </Show>
-    </>
-  );
+  const { isSignedIn, loading } = useAuth();
+
+  // Hold the page blank until the session probe resolves, otherwise a signed-in
+  // customer sees the "sign in" prompt flash on every hard refresh.
+  if (loading) return null;
+
+  return isSignedIn ? <AccountDashboard /> : <SignedOutPrompt />;
 }

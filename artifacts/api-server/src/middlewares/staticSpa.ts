@@ -4,8 +4,7 @@
  *
  * Same-origin is a hard requirement, not a convenience:
  *  - the generated API client calls relative `/api/...` paths
- *  - the admin session cookie is SameSite=Lax, so it is not sent cross-site
- *  - Clerk's Frontend API is proxied through this server at /api/__clerk
+ *  - the customer and admin session cookies are both SameSite=Lax
  *
  * On Replit this stitching was done by the platform router. Everywhere else
  * (Azure Container Apps, `pnpm start` locally) it happens here.

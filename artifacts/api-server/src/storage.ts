@@ -312,20 +312,12 @@ export class Storage {
     return Number(row?.c ?? 0);
   }
 
-  async getUserByClerkId(clerkUserId: string) {
-    const [user] = await db
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.clerkUserId, clerkUserId));
-    return user ?? null;
-  }
-
   async createUser(data: {
     id: string;
     email: string;
     name?: string;
     role?: string;
-    clerkUserId?: string;
+    passwordHash?: string;
   }) {
     const [user] = await db
       .insert(usersTable)
@@ -336,54 +328,16 @@ export class Storage {
   }
 
   /**
-   * Resolve the local user record for an authenticated Clerk user, creating or
-   * linking it on first sight (JIT provisioning). The desired role is computed
-   * by the caller (admin allowlist) and re-applied so role changes propagate.
+   * Attach a password to an existing user row. Rows created at checkout have
+   * no password, so this is how a returning customer claims their account.
    */
-  async provisionClerkUser(data: {
-    clerkUserId: string;
-    email: string;
-    name?: string;
-    role: string;
-  }) {
-    const { clerkUserId, email, name, role } = data;
-
-    // Already linked by Clerk id — keep email/name/role in sync.
-    const existingByClerk = await this.getUserByClerkId(clerkUserId);
-    if (existingByClerk) {
-      if (
-        existingByClerk.email !== email ||
-        existingByClerk.name !== (name ?? existingByClerk.name) ||
-        existingByClerk.role !== role
-      ) {
-        const [updated] = await db
-          .update(usersTable)
-          .set({ email, name: name ?? existingByClerk.name, role })
-          .where(eq(usersTable.id, existingByClerk.id))
-          .returning();
-        return updated ?? existingByClerk;
-      }
-      return existingByClerk;
-    }
-
-    // A legacy record exists for this email (created at checkout) — link it.
-    const existingByEmail = await this.getUserByEmail(email);
-    if (existingByEmail) {
-      const [updated] = await db
-        .update(usersTable)
-        .set({ clerkUserId, name: name ?? existingByEmail.name, role })
-        .where(eq(usersTable.id, existingByEmail.id))
-        .returning();
-      return updated ?? existingByEmail;
-    }
-
-    // Brand new user.
-    const [created] = await db
-      .insert(usersTable)
-      .values({ id: clerkUserId, email, name, role, clerkUserId })
-      .onConflictDoNothing()
+  async setUserPassword(id: string, passwordHash: string, name?: string) {
+    const [updated] = await db
+      .update(usersTable)
+      .set(name === undefined ? { passwordHash } : { passwordHash, name })
+      .where(eq(usersTable.id, id))
       .returning();
-    return created ?? (await this.getUserByClerkId(clerkUserId));
+    return updated ?? (await this.getUser(id));
   }
 
   async listUsers(opts: { limit?: number; offset?: number } = {}) {

@@ -3,11 +3,12 @@ import { useCart } from "@/lib/cart-context";
 import { ShoppingBag, Menu, X, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Show, UserButton } from "@clerk/react";
+import { useAuth } from "@/lib/auth";
 import apexLogo from "@assets/apex_logo_trimmed.png";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { itemCount } = useCart();
+  const { isSignedIn, logout } = useAuth();
   const [location] = useLocation();
   const searchString = useSearch();
   const activeCategory = new URLSearchParams(searchString).get("category");
@@ -96,7 +97,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </AnimatePresence>
               </Link>
 
-              <Show when="signed-out">
+              {!isSignedIn && (
+                <>
                 <Link
                   href="/sign-in"
                   className="hidden sm:inline-flex items-center px-4 py-2 rounded-full text-[10px] font-semibold tracking-[0.22em] uppercase text-primary border border-primary/20 hover:bg-primary/5 transition-colors"
@@ -112,9 +114,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 >
                   <User className="w-5 h-5" strokeWidth={1.5} />
                 </Link>
-              </Show>
+                </>
+              )}
 
-              <Show when="signed-in">
+              {isSignedIn && (
+                <>
                 <Link
                   href="/account"
                   className="w-10 h-10 flex items-center justify-center rounded-full text-foreground/80 hover:text-primary hover:bg-primary/5 transition-colors"
@@ -123,10 +127,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 >
                   <User className="w-5 h-5" strokeWidth={1.5} />
                 </Link>
-                <UserButton
-                  appearance={{ elements: { avatarBox: "w-9 h-9" } }}
-                />
-              </Show>
+                  <button
+                    type="button"
+                    onClick={() => void logout()}
+                    className="hidden sm:inline-flex items-center px-4 py-2 rounded-full text-[10px] font-semibold tracking-[0.22em] uppercase text-foreground/70 border border-border hover:text-primary hover:border-primary/20 transition-colors"
+                    data-testid="button-sign-out"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

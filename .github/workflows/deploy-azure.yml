@@ -32,10 +32,10 @@ jobs:
   #
   # Both SPAs are served from a single origin: the storefront at /, the admin
   # bundle nested under /admin/. This is not cosmetic — the admin session cookie
-  # is SameSite=Lax, the API client uses relative /api paths, and Clerk's
-  # Frontend API is proxied through the API server at /api/__clerk. All three
-  # break if the SPAs and the API sit on different hostnames, so the SWA must
-  # also have the API App Service attached as a linked backend.
+  # and admin session cookies are both SameSite=Lax and the API client uses
+  # relative /api paths, so both break if the SPAs and the API sit on different
+  # hostnames. The SWA must have the API App Service attached as a linked
+  # backend.
   # ---------------------------------------------------------------------------
   frontend:
     name: Build and deploy frontends
@@ -69,8 +69,6 @@ jobs:
           NODE_ENV: production
           PORT: '5173'
           BASE_PATH: /
-          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-          VITE_CLERK_PROXY_URL: ${{ secrets.VITE_CLERK_PROXY_URL }}
         run: pnpm --filter @workspace/storefront run build
 
       - name: Build admin

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { useUser } from "@clerk/react";
+import { useAuth } from "@/lib/auth";
 import { useCart } from "@/lib/cart-context";
 import {
   useCreateCheckout,
@@ -52,7 +52,7 @@ export default function Checkout() {
     useCart();
   const createCheckout = useCreateCheckout();
   const shippingRates = useGetShippingRates();
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn, user } = useAuth();
   const { data: savedAddresses } = useListMyAddresses({
     query: {
       queryKey: getListMyAddressesQueryKey(),
@@ -74,7 +74,7 @@ export default function Checkout() {
     const preferred = addresses.find((a) => a.isDefault) ?? addresses[0];
     setForm((f) => ({
       ...f,
-      email: f.email || user?.primaryEmailAddress?.emailAddress || "",
+      email: f.email || user?.email || "",
       name: preferred.name,
       address1: preferred.address1,
       address2: preferred.address2 ?? "",
