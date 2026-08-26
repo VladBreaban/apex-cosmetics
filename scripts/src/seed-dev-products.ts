@@ -1,5 +1,13 @@
 import pg from "pg";
 
+/**
+ * Seed the catalog for a fresh environment.
+ *
+ * Writes to the `products` / `prices` tables this application owns. The schema
+ * itself comes from Drizzle (`pnpm --filter @workspace/db run push`), not from
+ * here. Idempotent: re-running updates the existing rows.
+ */
+
 const { Client } = pg;
 
 const PRODUCTS = [
@@ -21,101 +29,53 @@ async function seed() {
   const client = new Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
 
+  // Catalog order is "newest first", so stamp created_at descending down the
+  // list to keep the array order above as the storefront order.
+  const base = Math.floor(Date.now() / 1000);
+
   try {
-    // Create schema and tables if missing
-    await client.query(`CREATE SCHEMA IF NOT EXISTS stripe`);
-
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS "stripe"."products" (
-        "id" text primary key,
-        "object" text,
-        "active" boolean,
-        "description" text,
-        "metadata" jsonb,
-        "name" text,
-        "created" integer,
-        "images" jsonb,
-        "livemode" boolean,
-        "package_dimensions" jsonb,
-        "shippable" boolean,
-        "statement_descriptor" text,
-        "unit_label" text,
-        "updated" integer,
-        "url" text
-      )
-    `);
-
-    await client.query(`
-      DO $$
-      BEGIN
-        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'pricing_type' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'stripe')) THEN
-          CREATE TYPE "stripe"."pricing_type" AS ENUM ('one_time', 'recurring');
-        END IF;
-        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'pricing_tiers' AND typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'stripe')) THEN
-          CREATE TYPE "stripe"."pricing_tiers" AS ENUM ('graduated', 'volume');
-        END IF;
-      END
-      $$
-    `);
-
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS "stripe"."prices" (
-        "id" text primary key,
-        "object" text,
-        "active" boolean,
-        "currency" text,
-        "metadata" jsonb,
-        "nickname" text,
-        "recurring" jsonb,
-        "type" stripe.pricing_type,
-        "unit_amount" integer,
-        "billing_scheme" text,
-        "created" integer,
-        "livemode" boolean,
-        "lookup_key" text,
-        "tiers_mode" stripe.pricing_tiers,
-        "transform_quantity" jsonb,
-        "unit_amount_decimal" text,
-        "product" text references stripe.products
-      )
-    `);
-
-    const now = Math.floor(Date.now() / 1000);
-
     for (let i = 0; i < PRODUCTS.length; i++) {
       const p = PRODUCTS[i];
       const priceId = `price_apex_${String(i + 1).padStart(3, "0")}`;
 
       await client.query(
-        `INSERT INTO stripe.products (id, object, active, description, metadata, name, created, images, livemode)
-         VALUES ($1, 'product', true, $2, $3, $4, $5, '[]', false)
+        `INSERT INTO products (id, name, description, active, category, image_key, featured, created_at)
+         VALUES ($1, $2, $3, true, $4, $5, $6, to_timestamp($7))
          ON CONFLICT (id) DO UPDATE SET
            name = EXCLUDED.name,
            description = EXCLUDED.description,
-           metadata = EXCLUDED.metadata,
-           active = EXCLUDED.active`,
+           active = EXCLUDED.active,
+           category = EXCLUDED.category,
+           image_key = EXCLUDED.image_key,
+           featured = EXCLUDED.featured,
+           created_at = EXCLUDED.created_at,
+           updated_at = now()`,
         [
           p.id,
-          p.description,
-          JSON.stringify({ category: p.category, imageKey: p.imageKey, featured: String(p.featured) }),
           p.name,
-          now - i * 100,
-        ]
+          p.description,
+          p.category,
+          p.imageKey,
+          p.featured,
+          base - i * 100,
+        ],
       );
 
       await client.query(
-        `INSERT INTO stripe.prices (id, object, active, currency, metadata, type, unit_amount, billing_scheme, created, livemode, product)
-         VALUES ($1, 'price', true, 'usd', '{}', 'one_time', $2, 'per_unit', $3, false, $4)
+        `INSERT INTO prices (id, product_id, unit_amount, currency, active)
+         VALUES ($1, $2, $3, 'usd', true)
          ON CONFLICT (id) DO UPDATE SET
+           product_id = EXCLUDED.product_id,
            unit_amount = EXCLUDED.unit_amount,
            active = EXCLUDED.active`,
-        [priceId, p.unitAmount, now - i * 100, p.id]
+        [priceId, p.id, p.unitAmount],
       );
 
       console.log(`✓ ${p.name} — $${(p.unitAmount / 100).toFixed(2)}`);
     }
 
-    console.log("\nAll 10 products seeded successfully!");
+    console.log(`
+Seeded ${PRODUCTS.length} products successfully.`);
   } finally {
     await client.end();
   }

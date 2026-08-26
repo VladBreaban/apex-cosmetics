@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "catalog:migrate": "tsx ./src/migrate-catalog-from-stripe-schema.ts",
+    "catalog:seed": "tsx ./src/seed-dev-products.ts",
+    "db:apply-schema": "tsx ./src/apply-schema.ts",
+    "admin:reset": "tsx ./src/reset-admin-user.ts"
   },
   "devDependencies": {
     "@types/node": "catalog:",
