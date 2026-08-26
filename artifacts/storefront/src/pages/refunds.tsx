@@ -25,7 +25,7 @@ export default function Refunds() {
         {
           heading: "How to request a return",
           body: [
-            "Email hello@apexhealth.com with your order number and the reason for the return. We will confirm whether the item is eligible and send return instructions.",
+            "Email hello@apex-cosmetics.com with your order number and the reason for the return. We will confirm whether the item is eligible and send return instructions.",
             "Please do not ship anything back before receiving those instructions — returns sent without prior authorisation cannot be tracked to your order and may not be refunded.",
           ],
         },
@@ -58,7 +58,7 @@ export default function Refunds() {
         {
           heading: "Contact",
           body: [
-            "Questions about a return or refund? Email hello@apexhealth.com with your order number and we will respond within two business days.",
+            "Questions about a return or refund? Email hello@apex-cosmetics.com with your order number and we will respond within two business days.",
           ],
         },
       ]}

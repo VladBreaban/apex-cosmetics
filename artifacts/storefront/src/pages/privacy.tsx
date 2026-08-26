@@ -39,13 +39,13 @@ export default function Privacy() {
         {
           heading: "Your rights",
           body: [
-            "You may request access to, correction of, or deletion of your personal data at any time. To exercise these rights, contact us at hello@apexhealth.com.",
+            "You may request access to, correction of, or deletion of your personal data at any time. To exercise these rights, contact us at hello@apex-cosmetics.com.",
           ],
         },
         {
           heading: "Contact",
           body: [
-            "Questions about this policy? Email hello@apexhealth.com and our team will respond within one business day.",
+            "Questions about this policy? Email hello@apex-cosmetics.com and our team will respond within one business day.",
           ],
         },
       ]}

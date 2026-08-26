@@ -49,7 +49,7 @@ export default function Terms() {
         {
           heading: "Contact",
           body: [
-            "Questions about these terms? Email hello@apexhealth.com.",
+            "Questions about these terms? Email hello@apex-cosmetics.com.",
           ],
         },
       ]}

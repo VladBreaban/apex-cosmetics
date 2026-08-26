@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import waterDropBg from "@assets/generated_images/water_header_bg.png";
 
-const SUPPORT_EMAIL = "hello@apexhealth.com";
+const SUPPORT_EMAIL = "hello@apex-cosmetics.com";
 
 const contactDetails = [
   {

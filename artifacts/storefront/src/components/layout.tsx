@@ -196,7 +196,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent opacity-60" />
         <div className="container mx-auto px-6 lg:px-12 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-16 md:gap-8 mb-24">
-            <div className="md:col-span-5 space-y-8">
+            <div className="md:col-span-4 space-y-8">
               <div className="flex items-center group">
                 <img src={apexLogo} alt="Apex Health" className="h-16 w-auto object-contain group-hover:scale-105 transition-transform duration-700" />
               </div>
@@ -215,7 +215,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </ul>
             </div>
 
-            <div className="md:col-span-4">
+            <div className="md:col-span-2">
+              <h4 className="font-sans font-semibold mb-8 uppercase tracking-[0.2em] text-[10px] text-primary">Support</h4>
+              <ul className="space-y-4">
+                <li><Link href="/contact" className="text-sm font-light text-muted-foreground hover:text-foreground transition-colors">Contact</Link></li>
+                <li><Link href="/refunds" className="text-sm font-light text-muted-foreground hover:text-foreground transition-colors">Refunds & Returns</Link></li>
+                <li><Link href="/terms" className="text-sm font-light text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
+                <li><Link href="/privacy" className="text-sm font-light text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
+              </ul>
+            </div>
+
+            <div className="md:col-span-3">
               <h4 className="font-sans font-semibold mb-8 uppercase tracking-[0.2em] text-[10px] text-primary">Priority Access</h4>
               <p className="text-sm font-light text-muted-foreground mb-6">Join for clinical trial insights and exclusive allocations.</p>
               <div className="flex relative">
@@ -232,12 +242,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
           <div className="pt-8 border-t border-border text-[11px] text-muted-foreground flex flex-col md:flex-row justify-between items-center gap-4 font-light tracking-[0.1em] uppercase">
             <p>&copy; {new Date().getFullYear()} Apex Health Laboratories.</p>
-            <div className="flex gap-8">
-              <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
-              <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-              <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-              <Link href="/refunds" className="hover:text-foreground transition-colors">Refunds</Link>
-            </div>
+            <a
+              href="mailto:hello@apex-cosmetics.com"
+              className="hover:text-foreground transition-colors normal-case tracking-normal"
+            >
+              hello@apex-cosmetics.com
+            </a>
           </div>
         </div>
       </footer>
