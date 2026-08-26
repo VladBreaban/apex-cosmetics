@@ -16,6 +16,7 @@ import CheckoutCancel from "@/pages/checkout-cancel";
 import Contact from "@/pages/contact";
 import Privacy from "@/pages/privacy";
 import Terms from "@/pages/terms";
+import Refunds from "@/pages/refunds";
 import Account from "@/pages/account";
 import SignIn from "@/pages/sign-in";
 import NotFound from "@/pages/not-found";
@@ -39,6 +40,7 @@ function StoreRoutes() {
         <Route path="/contact" component={Contact} />
         <Route path="/privacy" component={Privacy} />
         <Route path="/terms" component={Terms} />
+        <Route path="/refunds" component={Refunds} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

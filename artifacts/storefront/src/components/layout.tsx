@@ -236,6 +236,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
               <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
               <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+              <Link href="/refunds" className="hover:text-foreground transition-colors">Refunds</Link>
             </div>
           </div>
         </div>

@@ -30,7 +30,8 @@ export default function Terms() {
         {
           heading: "Returns & refunds",
           body: [
-            "If you are not satisfied with your purchase, contact us within 30 days of delivery. Unopened products in original condition may be eligible for a refund or exchange. Refunds are issued to the original payment method.",
+            "If you are not satisfied with your purchase, contact us within 30 days of delivery. Unopened products in original condition may be eligible for a refund. Refunds are issued to the original payment method.",
+            "Full details — eligibility, how to request a return, and how long a refund takes — are set out in our Refund & Return Policy at /refunds, which forms part of these terms.",
           ],
         },
         {
