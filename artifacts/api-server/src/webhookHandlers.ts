@@ -1,4 +1,7 @@
-import { getStripeSync } from "./stripeClient";
+import {
+  getUncachableStripeClient,
+  getUncachableStripeWebhookSecret,
+} from "./stripeClient";
 import { db } from "@workspace/db";
 import { ordersTable, orderItemsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
@@ -21,22 +24,28 @@ export class WebhookHandlers {
       );
     }
 
-    const sync = await getStripeSync();
-    await sync.processWebhook(payload, signature);
+    // Verify the signature before trusting anything in the payload.
+    // stripe-replit-sync used to do this and also mirror product/price events
+    // into a `stripe.*` schema; the catalog is owned by this database now, so
+    // checkout events are the only ones that matter.
+    const [stripe, webhookSecret] = await Promise.all([
+      getUncachableStripeClient(),
+      getUncachableStripeWebhookSecret(),
+    ]);
 
-    // Parse the event to handle order creation
-    try {
-      const event = JSON.parse(payload.toString());
-      if (event.type === "checkout.session.completed") {
-        await WebhookHandlers.handleCheckoutCompleted(event.data.object);
-      } else if (
-        event.type === "checkout.session.expired" ||
-        event.type === "checkout.session.async_payment_failed"
-      ) {
-        await WebhookHandlers.handleCheckoutAbandoned(event.data.object);
-      }
-    } catch (err) {
-      logger.warn({ err }, "Failed to parse webhook event for order creation");
+    const event = stripe.webhooks.constructEvent(
+      payload,
+      signature,
+      webhookSecret,
+    );
+
+    if (event.type === "checkout.session.completed") {
+      await WebhookHandlers.handleCheckoutCompleted(event.data.object);
+    } else if (
+      event.type === "checkout.session.expired" ||
+      event.type === "checkout.session.async_payment_failed"
+    ) {
+      await WebhookHandlers.handleCheckoutAbandoned(event.data.object);
     }
   }
 
@@ -90,11 +99,15 @@ export class WebhookHandlers {
       for (const item of lineItems.data) {
         const price = item.price as any;
         const product = price?.product as any;
+        // price_data creates a throwaway Stripe product per line item, so the
+        // catalog ids are read back from the metadata checkout attached rather
+        // than from the Stripe object ids, which mean nothing to us.
+        const meta = (product?.metadata ?? {}) as Record<string, string>;
         await db.insert(orderItemsTable).values({
           orderId: order.id,
-          productId: product?.id ?? "unknown",
+          productId: meta.productId ?? product?.id ?? "unknown",
           productName: product?.name ?? item.description ?? "Product",
-          priceId: price?.id ?? null,
+          priceId: meta.priceId ?? price?.id ?? null,
           unitAmount: price?.unit_amount ?? 0,
           quantity: item.quantity ?? 1,
           currency: price?.currency ?? currency,

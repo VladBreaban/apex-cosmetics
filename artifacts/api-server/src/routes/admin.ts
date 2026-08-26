@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
+import { randomBytes } from "node:crypto";
 import { storage } from "../storage";
-import { getUncachableStripeClient } from "../stripeClient";
 import { requireAdminSession } from "../middlewares/adminAuth";
 import {
   AdminListProductsQueryParams,
@@ -18,6 +18,15 @@ import {
   AdminCreatePriceBody,
   AdminUpdateOrderBody,
 } from "@workspace/api-zod";
+
+/**
+ * Catalog ids are generated here rather than by Stripe. The `prod_`/`price_`
+ * prefixes match the existing seeded catalog (`prod_apex_001`) so old and new
+ * rows read alike and historical order_items keep resolving.
+ */
+function newId(prefix: "prod" | "price"): string {
+  return `${prefix}_${randomBytes(12).toString("base64url")}`;
+}
 
 const router: IRouter = Router();
 
@@ -48,7 +57,8 @@ router.get("/admin/stats", async (_req, res): Promise<void> => {
   });
 });
 
-// Products
+// Products — stored here, not in Stripe. Stripe never sees a product or price
+// record; checkout sends amounts inline from these rows.
 router.get("/admin/products", async (req, res): Promise<void> => {
   const params = AdminListProductsQueryParams.safeParse(req.query);
   if (!params.success) {
@@ -83,41 +93,25 @@ router.post("/admin/products", async (req, res): Promise<void> => {
     featured,
   } = parsed.data;
 
-  const stripe = await getUncachableStripeClient();
-
-  const product = await stripe.products.create({
+  const productId = newId("prod");
+  await storage.createProduct({
+    id: productId,
     name,
-    description: description ?? undefined,
-    metadata: {
-      ...(category ? { category } : {}),
-      ...(imageKey ? { imageKey } : {}),
-      ...(featured !== undefined ? { featured: String(featured) } : {}),
-    },
+    description: description ?? null,
+    category: category ?? null,
+    imageKey: imageKey ?? null,
+    featured: featured ?? false,
   });
 
-  await stripe.prices.create({
-    product: product.id,
-    unit_amount: unitAmount,
+  await storage.createPrice({
+    id: newId("price"),
+    productId,
+    unitAmount,
     currency: currency ?? "usd",
   });
 
-  // Brief delay to allow webhook sync
-  await new Promise((r) => setTimeout(r, 500));
-
-  const created = await storage.getProductWithPrices(product.id);
-
-  res.status(201).json(
-    created ?? {
-      id: product.id,
-      name: product.name,
-      description: product.description ?? null,
-      active: product.active,
-      category: category ?? null,
-      imageKey: imageKey ?? null,
-      featured: featured ?? false,
-      prices: [],
-    },
-  );
+  const created = await storage.getProductWithPrices(productId);
+  res.status(201).json(created);
 });
 
 router.patch("/admin/products/:id", async (req, res): Promise<void> => {
@@ -136,43 +130,25 @@ router.patch("/admin/products/:id", async (req, res): Promise<void> => {
   const { name, description, active, category, imageKey, featured } =
     parsed.data;
 
-  const stripe = await getUncachableStripeClient();
+  const updated = await storage.updateProduct(params.data.id, {
+    ...(name !== undefined ? { name } : {}),
+    ...(description !== undefined ? { description } : {}),
+    ...(active !== undefined ? { active } : {}),
+    ...(category !== undefined ? { category } : {}),
+    ...(imageKey !== undefined ? { imageKey } : {}),
+    ...(featured !== undefined ? { featured } : {}),
+  });
 
-  const updateData: any = {};
-  if (name !== undefined) updateData.name = name;
-  if (description !== undefined) updateData.description = description;
-  if (active !== undefined) updateData.active = active;
-
-  const metadataUpdate: any = {};
-  if (category !== undefined) metadataUpdate.category = category;
-  if (imageKey !== undefined) metadataUpdate.imageKey = imageKey;
-  if (featured !== undefined) metadataUpdate.featured = String(featured);
-
-  if (Object.keys(metadataUpdate).length > 0) {
-    updateData.metadata = metadataUpdate;
+  if (!updated) {
+    res.status(404).json({ error: "Product not found" });
+    return;
   }
 
-  const updated = await stripe.products.update(params.data.id, updateData);
-
-  await new Promise((r) => setTimeout(r, 500));
-
-  const product = await storage.getProductWithPrices(updated.id);
-  const meta = (updated.metadata as any) ?? {};
-
-  res.json(
-    product ?? {
-      id: updated.id,
-      name: updated.name,
-      description: updated.description ?? null,
-      active: updated.active,
-      category: meta.category ?? null,
-      imageKey: meta.imageKey ?? null,
-      featured: meta.featured === "true",
-      prices: [],
-    },
-  );
+  res.json(await storage.getProductWithPrices(updated.id));
 });
 
+// Deactivates rather than deletes: order history references product ids, and
+// prices cascade from the product row.
 router.delete("/admin/products/:id", async (req, res): Promise<void> => {
   const params = AdminDeactivateProductParams.safeParse(req.params);
   if (!params.success) {
@@ -180,28 +156,16 @@ router.delete("/admin/products/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const stripe = await getUncachableStripeClient();
-  const updated = await stripe.products.update(params.data.id, {
+  const updated = await storage.updateProduct(params.data.id, {
     active: false,
   });
 
-  await new Promise((r) => setTimeout(r, 500));
+  if (!updated) {
+    res.status(404).json({ error: "Product not found" });
+    return;
+  }
 
-  const product = await storage.getProductWithPrices(updated.id);
-  const meta = (updated.metadata as any) ?? {};
-
-  res.json(
-    product ?? {
-      id: updated.id,
-      name: updated.name,
-      description: updated.description ?? null,
-      active: false,
-      category: meta.category ?? null,
-      imageKey: meta.imageKey ?? null,
-      featured: meta.featured === "true",
-      prices: [],
-    },
-  );
+  res.json(await storage.getProductWithPrices(updated.id));
 });
 
 // Prices
@@ -225,21 +189,20 @@ router.post("/admin/prices", async (req, res): Promise<void> => {
 
   const { productId, unitAmount, currency = "usd" } = parsed.data;
 
-  const stripe = await getUncachableStripeClient();
-  const price = await stripe.prices.create({
-    product: productId,
-    unit_amount: unitAmount,
+  const product = await storage.getProductWithPrices(productId);
+  if (!product) {
+    res.status(404).json({ error: "Product not found" });
+    return;
+  }
+
+  const price = await storage.createPrice({
+    id: newId("price"),
+    productId,
+    unitAmount,
     currency: currency ?? "usd",
   });
 
-  res.status(201).json({
-    id: price.id,
-    unitAmount: price.unit_amount ?? 0,
-    currency: price.currency,
-    active: price.active,
-    productId:
-      typeof price.product === "string" ? price.product : price.product.id,
-  });
+  res.status(201).json(price);
 });
 
 router.delete("/admin/prices/:id", async (req, res): Promise<void> => {
@@ -249,17 +212,13 @@ router.delete("/admin/prices/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const stripe = await getUncachableStripeClient();
-  const price = await stripe.prices.update(params.data.id, { active: false });
+  const price = await storage.setPriceActive(params.data.id, false);
+  if (!price) {
+    res.status(404).json({ error: "Price not found" });
+    return;
+  }
 
-  res.json({
-    id: price.id,
-    unitAmount: price.unit_amount ?? 0,
-    currency: price.currency,
-    active: price.active,
-    productId:
-      typeof price.product === "string" ? price.product : price.product.id,
-  });
+  res.json(price);
 });
 
 // Orders

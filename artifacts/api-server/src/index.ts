@@ -1,5 +1,3 @@
-import { runMigrations } from "stripe-replit-sync";
-import { getStripeSync } from "./stripeClient";
 import app from "./app";
 import { logger } from "./lib/logger";
 import { storage } from "./storage";
@@ -28,36 +26,45 @@ async function seedAdmin() {
   }
 }
 
-async function initStripe() {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL environment variable is required");
+/**
+ * Report how Stripe is wired without touching the catalog.
+ *
+ * The database owns products and prices now, so there is no schema to migrate
+ * and nothing to backfill from Stripe. Webhook endpoints are registered in the
+ * Stripe dashboard rather than on boot: auto-registration mints a fresh signing
+ * secret that a running process cannot write back into its own environment, so
+ * it would leave STRIPE_WEBHOOK_SECRET stale and every event failing signature
+ * verification.
+ */
+function reportStripeConfig(): void {
+  if (!process.env.STRIPE_SECRET_KEY?.trim()) {
+    logger.warn(
+      "STRIPE_SECRET_KEY not set — the catalog still serves from the database, " +
+        "but checkout will fail until it is configured.",
+    );
+    return;
   }
 
-  logger.info("Initializing Stripe schema...");
-  await runMigrations({ databaseUrl });
-  logger.info("Stripe schema ready");
-
-  const stripeSync = await getStripeSync();
-
-  const baseUrl = getConfiguredBaseUrl();
-  if (baseUrl) {
-    const webhookUrl = `${baseUrl}/api/stripe/webhook`;
-    logger.info({ webhookUrl }, "Setting up managed webhook");
-    await stripeSync.findOrCreateManagedWebhook(webhookUrl);
-    logger.info("Webhook configured");
-  } else {
+  if (!process.env.STRIPE_WEBHOOK_SECRET?.trim()) {
     logger.warn(
-      "PUBLIC_BASE_URL not set — skipping webhook registration. Register the " +
-        "Stripe webhook manually against <public origin>/api/stripe/webhook.",
+      "STRIPE_WEBHOOK_SECRET not set — checkout sessions can be created, but " +
+        "completed payments will not produce orders because webhook signatures " +
+        "cannot be verified.",
     );
   }
 
-  logger.info("Starting Stripe data backfill...");
-  stripeSync
-    .syncBackfill()
-    .then(() => logger.info("Stripe data backfill complete"))
-    .catch((err) => logger.error({ err }, "Stripe backfill error"));
+  const baseUrl = getConfiguredBaseUrl();
+  if (baseUrl) {
+    logger.info(
+      { webhookUrl: `${baseUrl}/api/stripe/webhook` },
+      "Stripe configured. Register this webhook URL in the Stripe dashboard " +
+        "for checkout.session.completed, .expired and .async_payment_failed.",
+    );
+  } else {
+    logger.warn(
+      "PUBLIC_BASE_URL not set — cannot report the webhook URL to register.",
+    );
+  }
 }
 
 const rawPort = process.env["PORT"];
@@ -70,11 +77,7 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-try {
-  await initStripe();
-} catch (err) {
-  logger.error({ err }, "Stripe initialization failed — server will start without Stripe");
-}
+reportStripeConfig();
 
 try {
   await seedAdmin();

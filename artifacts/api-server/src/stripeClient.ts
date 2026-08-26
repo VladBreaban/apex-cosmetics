@@ -1,5 +1,4 @@
 import Stripe from "stripe";
-import { StripeSync } from "stripe-replit-sync";
 
 type StripeCredentials = {
   secretKey: string;
@@ -89,16 +88,13 @@ export async function getUncachableStripeClient(): Promise<Stripe> {
   return new Stripe(secretKey);
 }
 
-export async function getStripeSync(): Promise<StripeSync> {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL environment variable is required");
+export async function getUncachableStripeWebhookSecret(): Promise<string> {
+  const { webhookSecret } = await getStripeCredentials();
+  if (!webhookSecret) {
+    throw new Error(
+      "STRIPE_WEBHOOK_SECRET is not set. Webhook signatures cannot be " +
+        "verified, so incoming events are rejected.",
+    );
   }
-
-  const { secretKey, webhookSecret } = await getStripeCredentials();
-  return new StripeSync({
-    poolConfig: { connectionString: databaseUrl },
-    stripeSecretKey: secretKey,
-    stripeWebhookSecret: webhookSecret ?? "",
-  });
+  return webhookSecret;
 }

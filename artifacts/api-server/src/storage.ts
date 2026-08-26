@@ -6,167 +6,264 @@ import {
   discountRedemptionsTable,
   addressesTable,
   adminUsersTable,
+  productsTable,
+  pricesTable,
 } from "@workspace/db";
-import { eq, sql, desc, count, sum, and, gte } from "drizzle-orm";
+import {
+  eq,
+  sql,
+  desc,
+  asc,
+  count,
+  sum,
+  and,
+  gte,
+  inArray,
+} from "drizzle-orm";
+
+type ProductRow = typeof productsTable.$inferSelect;
+type PriceRow = typeof pricesTable.$inferSelect;
+
+/** The wire shape the API and both SPAs expect for a price. */
+function toPriceDto(row: PriceRow) {
+  return {
+    id: row.id,
+    unitAmount: row.unitAmount,
+    currency: row.currency,
+    active: row.active,
+    productId: row.productId,
+  };
+}
+
+/** The wire shape the API and both SPAs expect for a product. */
+function toProductDto(row: ProductRow, prices: PriceRow[]) {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description ?? null,
+    active: row.active,
+    category: row.category ?? null,
+    imageKey: row.imageKey ?? null,
+    featured: row.featured,
+    prices: prices.map(toPriceDto),
+  };
+}
 
 export class Storage {
-  // Products — from stripe schema
-  async listProductsWithPrices(opts: {
-    activeOnly?: boolean;
-    category?: string | null;
-    featured?: boolean;
-    limit?: number;
-    offset?: number;
-  } = {}) {
-    const { activeOnly = true, category, featured, limit = 50, offset = 0 } = opts;
+  // Products — this database is the source of truth. Stripe holds no product
+  // or price records; checkout sends prices inline as `price_data`.
+  async listProductsWithPrices(
+    opts: {
+      activeOnly?: boolean;
+      category?: string | null;
+      featured?: boolean;
+      limit?: number;
+      offset?: number;
+    } = {},
+  ) {
+    const {
+      activeOnly = true,
+      category,
+      featured,
+      limit = 50,
+      offset = 0,
+    } = opts;
 
-    let whereClause = activeOnly ? "active = true" : "1=1";
-    if (category) whereClause += ` AND metadata->>'category' = '${category.replace(/'/g, "''")}'`;
-    if (featured !== undefined) whereClause += ` AND metadata->>'featured' = '${featured ? "true" : "false"}'`;
-
-    const rows = await db.execute(sql.raw(`
-      WITH paginated_products AS (
-        SELECT id, name, description, metadata, active, images
-        FROM stripe.products
-        WHERE ${whereClause}
-        ORDER BY created DESC
-        LIMIT ${limit} OFFSET ${offset}
-      ),
-      total_count AS (
-        SELECT COUNT(*) as cnt FROM stripe.products WHERE ${whereClause}
-      )
-      SELECT
-        p.id as product_id,
-        p.name as product_name,
-        p.description as product_description,
-        p.active as product_active,
-        p.metadata as product_metadata,
-        p.images as product_images,
-        pr.id as price_id,
-        pr.unit_amount,
-        pr.currency,
-        pr.active as price_active,
-        (SELECT cnt FROM total_count) as total_count
-      FROM paginated_products p
-      LEFT JOIN stripe.prices pr ON pr.product = p.id AND pr.active = true
-      ORDER BY p.id, pr.unit_amount
-    `));
-
-    const productsMap = new Map<string, any>();
-    let total = 0;
-
-    for (const row of rows.rows) {
-      total = Number(row.total_count ?? 0);
-      const id = row.product_id as string;
-
-      if (!productsMap.has(id)) {
-        const meta = (row.product_metadata as any) ?? {};
-        productsMap.set(id, {
-          id,
-          name: row.product_name,
-          description: row.product_description ?? null,
-          active: row.product_active,
-          category: meta.category ?? null,
-          imageKey: meta.imageKey ?? null,
-          featured: meta.featured === "true",
-          prices: [],
-        });
-      }
-
-      if (row.price_id) {
-        productsMap.get(id).prices.push({
-          id: row.price_id,
-          unitAmount: Number(row.unit_amount ?? 0),
-          currency: row.currency ?? "usd",
-          active: row.price_active,
-          productId: id,
-        });
-      }
+    const conditions = [];
+    if (activeOnly) conditions.push(eq(productsTable.active, true));
+    if (category) conditions.push(eq(productsTable.category, category));
+    if (featured !== undefined) {
+      conditions.push(eq(productsTable.featured, featured));
     }
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-    return { data: Array.from(productsMap.values()), total };
+    const [totalRow] = await db
+      .select({ value: count() })
+      .from(productsTable)
+      .where(where);
+    const total = Number(totalRow?.value ?? 0);
+
+    const products = await db
+      .select()
+      .from(productsTable)
+      .where(where)
+      .orderBy(desc(productsTable.createdAt), asc(productsTable.id))
+      .limit(limit)
+      .offset(offset);
+
+    if (products.length === 0) return { data: [], total };
+
+    const prices = await this.pricesForProducts(products.map((p) => p.id));
+
+    return {
+      data: products.map((p) => toProductDto(p, prices.get(p.id) ?? [])),
+      total,
+    };
   }
 
   async getProductWithPrices(productId: string) {
-    const rows = await db.execute(sql`
-      SELECT
-        p.id as product_id,
-        p.name as product_name,
-        p.description as product_description,
-        p.active as product_active,
-        p.metadata as product_metadata,
-        p.images as product_images,
-        pr.id as price_id,
-        pr.unit_amount,
-        pr.currency,
-        pr.active as price_active
-      FROM stripe.products p
-      LEFT JOIN stripe.prices pr ON pr.product = p.id AND pr.active = true
-      WHERE p.id = ${productId}
-      ORDER BY pr.unit_amount
-    `);
+    const [product] = await db
+      .select()
+      .from(productsTable)
+      .where(eq(productsTable.id, productId))
+      .limit(1);
 
-    if (rows.rows.length === 0) return null;
+    if (!product) return null;
 
-    const first = rows.rows[0] as any;
-    const meta = (first.product_metadata as any) ?? {};
+    const prices = await this.pricesForProducts([product.id]);
+    return toProductDto(product, prices.get(product.id) ?? []);
+  }
 
-    const product: any = {
-      id: first.product_id,
-      name: first.product_name,
-      description: first.product_description ?? null,
-      active: first.product_active,
-      category: meta.category ?? null,
-      imageKey: meta.imageKey ?? null,
-      featured: meta.featured === "true",
-      prices: [],
-    };
+  /** Active prices for a set of products, grouped by product id, cheapest first. */
+  private async pricesForProducts(productIds: string[]) {
+    const rows = productIds.length
+      ? await db
+          .select()
+          .from(pricesTable)
+          .where(
+            and(
+              inArray(pricesTable.productId, productIds),
+              eq(pricesTable.active, true),
+            ),
+          )
+          .orderBy(asc(pricesTable.unitAmount))
+      : [];
 
-    for (const row of rows.rows) {
-      const r = row as any;
-      if (r.price_id) {
-        product.prices.push({
-          id: r.price_id,
-          unitAmount: Number(r.unit_amount ?? 0),
-          currency: r.currency ?? "usd",
-          active: r.price_active,
-          productId: first.product_id,
-        });
-      }
+    const byProduct = new Map<string, PriceRow[]>();
+    for (const row of rows) {
+      const list = byProduct.get(row.productId) ?? [];
+      list.push(row);
+      byProduct.set(row.productId, list);
     }
-
-    return product;
+    return byProduct;
   }
 
   async listAllPrices(productId?: string | null) {
-    const rows = await db.execute(
-      productId
-        ? sql`SELECT id, unit_amount, currency, active, product FROM stripe.prices WHERE product = ${productId} ORDER BY unit_amount`
-        : sql`SELECT id, unit_amount, currency, active, product FROM stripe.prices ORDER BY unit_amount`,
-    );
+    const rows = await db
+      .select()
+      .from(pricesTable)
+      .where(productId ? eq(pricesTable.productId, productId) : undefined)
+      .orderBy(asc(pricesTable.unitAmount));
 
-    return rows.rows.map((r: any) => ({
-      id: r.id,
-      unitAmount: Number(r.unit_amount ?? 0),
-      currency: r.currency ?? "usd",
-      active: r.active,
-      productId: r.product,
-    }));
+    return rows.map(toPriceDto);
   }
 
   async getPrice(priceId: string) {
-    const rows = await db.execute(
-      sql`SELECT id, unit_amount, currency, active, product FROM stripe.prices WHERE id = ${priceId}`,
-    );
-    const r = rows.rows[0] as any;
-    if (!r) return null;
-    return {
-      id: r.id,
-      unitAmount: Number(r.unit_amount ?? 0),
-      currency: r.currency ?? "usd",
-      active: r.active,
-      productId: r.product,
-    };
+    const [row] = await db
+      .select()
+      .from(pricesTable)
+      .where(eq(pricesTable.id, priceId))
+      .limit(1);
+
+    return row ? toPriceDto(row) : null;
+  }
+
+  /**
+   * Prices joined to their product, for a set of price ids.
+   *
+   * Checkout uses this to price a cart from the database rather than trusting
+   * the amounts a client sends. Inactive prices and inactive products are
+   * excluded, so a delisted item cannot be bought via a stale cart.
+   */
+  async getPurchasablePrices(priceIds: string[]) {
+    if (priceIds.length === 0) return [];
+
+    return db
+      .select({
+        priceId: pricesTable.id,
+        unitAmount: pricesTable.unitAmount,
+        currency: pricesTable.currency,
+        productId: productsTable.id,
+        productName: productsTable.name,
+        productDescription: productsTable.description,
+      })
+      .from(pricesTable)
+      .innerJoin(productsTable, eq(pricesTable.productId, productsTable.id))
+      .where(
+        and(
+          inArray(pricesTable.id, priceIds),
+          eq(pricesTable.active, true),
+          eq(productsTable.active, true),
+        ),
+      );
+  }
+
+  async createProduct(input: {
+    id: string;
+    name: string;
+    description?: string | null;
+    category?: string | null;
+    imageKey?: string | null;
+    featured?: boolean;
+  }) {
+    const [row] = await db
+      .insert(productsTable)
+      .values({
+        id: input.id,
+        name: input.name,
+        description: input.description ?? null,
+        category: input.category ?? null,
+        imageKey: input.imageKey ?? null,
+        featured: input.featured ?? false,
+        active: true,
+      })
+      .returning();
+    return row;
+  }
+
+  async updateProduct(
+    productId: string,
+    patch: {
+      name?: string;
+      description?: string | null;
+      active?: boolean;
+      category?: string | null;
+      imageKey?: string | null;
+      featured?: boolean;
+    },
+  ) {
+    const values: Record<string, unknown> = { updatedAt: new Date() };
+    if (patch.name !== undefined) values.name = patch.name;
+    if (patch.description !== undefined) values.description = patch.description;
+    if (patch.active !== undefined) values.active = patch.active;
+    if (patch.category !== undefined) values.category = patch.category;
+    if (patch.imageKey !== undefined) values.imageKey = patch.imageKey;
+    if (patch.featured !== undefined) values.featured = patch.featured;
+
+    const [row] = await db
+      .update(productsTable)
+      .set(values)
+      .where(eq(productsTable.id, productId))
+      .returning();
+    return row ?? null;
+  }
+
+  async createPrice(input: {
+    id: string;
+    productId: string;
+    unitAmount: number;
+    currency?: string;
+  }) {
+    const [row] = await db
+      .insert(pricesTable)
+      .values({
+        id: input.id,
+        productId: input.productId,
+        unitAmount: input.unitAmount,
+        currency: input.currency ?? "usd",
+        active: true,
+      })
+      .returning();
+    return toPriceDto(row);
+  }
+
+  async setPriceActive(priceId: string, active: boolean) {
+    const [row] = await db
+      .update(pricesTable)
+      .set({ active })
+      .where(eq(pricesTable.id, priceId))
+      .returning();
+    return row ? toPriceDto(row) : null;
   }
 
   // Orders
