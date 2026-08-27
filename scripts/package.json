@@ -10,11 +10,13 @@
     "catalog:seed": "tsx ./src/seed-dev-products.ts",
     "db:apply-schema": "tsx ./src/apply-schema.ts",
     "admin:reset": "tsx ./src/reset-admin-user.ts",
-    "admin:create": "tsx ./src/create-admin-user.ts"
+    "admin:create": "tsx ./src/create-admin-user.ts",
+    "images:backfill": "tsx ./src/backfill-product-images.ts"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/pg": "^8.20.0",
+    "sharp": "^0.35.4",
     "tsx": "catalog:"
   },
   "dependencies": {

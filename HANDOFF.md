@@ -10,7 +10,7 @@ Scratch notes for picking this back up. Not documentation — `replit.md` is the
 
 **API — deployed and working.** `apex-cosmetics-prod-api` runs the refactored code. Verified live: `/api/products` returns 12 products, `/api/healthz` is ok, CORS allows the three configured origins and refuses others, preflight permits credentials.
 
-**Frontend — NOT deployed.** This is the one thing blocking everything else. The Static Web App still serves a bundle built before any of the recent work. Seven commits are queued behind a single `frontend` run.
+**Frontend — deployed, but stale.** Checked live on 2026-08-27: `apex-cosmetics.com/admin/` returns 200, and the served bundle (`index-BJAQiYKH.js`) does contain `https://api.apex-cosmetics.com`, so the admin can reach the API and log in. It predates the admin work in `da51c75` though — no Categories page, read-only customers. A `frontend` run is still needed to ship that.
 
 **Database — migrated.** All 8 tables exist. 12 products and prices live in `products` / `prices`. The legacy `stripe.*` mirror is still present and still populated, deliberately, so nothing was cut over irreversibly.
 
@@ -66,7 +66,26 @@ pnpm --filter @workspace/scripts run db:apply-schema
 
 Until it exists, `GET /api/admin/categories` errors and the Categories page stays empty. Nothing else regresses — `products.category` is unchanged.
 
-### 6. Drop the dead mirror
+### 6. Backfill the product images
+
+Product photos currently exist **only inside the storefront's build**. `products.image_key` holds a bare filename like `Apex-Facial-Serum-Web_1781426371736.png`, but nothing resolves it: the storefront ignores the column and matches on product *name* against images imported in `artifacts/storefront/src/lib/image-map.ts`, which Vite emits content-hashed. The raw filename 404s. That is why the admin panel shows no photo and why a product image cannot be changed from the admin.
+
+After the API is deployed:
+
+```
+$env:API_BASE_URL   = 'https://api.apex-cosmetics.com'
+$env:ADMIN_USERNAME = 'admin'
+$env:ADMIN_PASSWORD = '<the admin password>'
+pnpm --filter @workspace/scripts run images:backfill -- --dry-run
+```
+
+Drop `--dry-run` to write. It re-encodes on the way through — the sources are 2000x2000 PNGs at ~7.3MB each, over the API's 5MB cap, and the storefront is shipping them at full size today. At 1600px WebP q82 they land around 580KB: **85MB to 6.8MB across the twelve**.
+
+Re-running skips products that already carry an uploaded key, so a photo set by hand in the admin is not overwritten. `--force` replaces anyway.
+
+Once this has run, the bundled images in `image-map.ts` are fallback only. They can be deleted from the storefront bundle in a later pass — worth doing, since Vite still emits all 85MB of them.
+
+### 7. Drop the dead mirror
 
 Once the above is verified: `DROP SCHEMA stripe CASCADE;`
 
@@ -119,6 +138,8 @@ pnpm --filter @workspace/scripts run admin:reset      # clear admin_users
 pnpm --filter @workspace/scripts run admin:create     # create or reset one admin
 
 pnpm --filter @workspace/api-spec run codegen         # after editing openapi.yaml
+
+pnpm --filter @workspace/scripts run images:backfill  # storefront images -> media store
 ```
 
 Use `db:apply-schema` rather than `drizzle-kit push` against a deployed database — push diffs and can drop or alter; this only creates what is missing.
