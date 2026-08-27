@@ -645,6 +645,7 @@ export const AdminListUsersResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string().nullish(),
+  "role": zod.string().optional(),
   "stripeCustomerId": zod.string().nullish(),
   "totalOrders": zod.number().optional(),
   "totalSpent": zod.number().optional(),
@@ -665,10 +666,245 @@ export const AdminGetUserResponse = zod.object({
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string().nullish(),
+  "role": zod.string().optional(),
   "stripeCustomerId": zod.string().nullish(),
   "totalOrders": zod.number().optional(),
   "totalSpent": zod.number().optional(),
   "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a customer record
+ */
+export const AdminUpdateUserParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const AdminUpdateUserBody = zod.object({
+  "name": zod.string().nullish(),
+  "email": zod.string().optional(),
+  "role": zod.enum(['customer', 'admin']).optional()
+})
+
+export const AdminUpdateUserResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string().nullish(),
+  "role": zod.string().optional(),
+  "stripeCustomerId": zod.string().nullish(),
+  "totalOrders": zod.number().optional(),
+  "totalSpent": zod.number().optional(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Set a customer's password
+ */
+export const AdminSetUserPasswordParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const adminSetUserPasswordBodyPasswordMin = 8;
+
+
+
+export const AdminSetUserPasswordBody = zod.object({
+  "password": zod.string().min(adminSetUserPasswordBodyPasswordMin)
+})
+
+
+/**
+ * @summary List a customer's orders
+ */
+export const AdminListUserOrdersParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const AdminListUserOrdersResponse = zod.object({
+  "data": zod.array(zod.object({
+  "id": zod.number(),
+  "stripeSessionId": zod.string().nullish(),
+  "stripePaymentIntentId": zod.string().nullish(),
+  "customerEmail": zod.string(),
+  "customerName": zod.string().nullish(),
+  "status": zod.string(),
+  "totalAmount": zod.number(),
+  "currency": zod.string(),
+  "createdAt": zod.string(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "productId": zod.string(),
+  "productName": zod.string(),
+  "priceId": zod.string().nullish(),
+  "unitAmount": zod.number(),
+  "quantity": zod.number(),
+  "currency": zod.string()
+})).optional()
+})),
+  "total": zod.number()
+})
+
+
+/**
+ * @summary List a customer's saved addresses
+ */
+export const AdminListUserAddressesParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const AdminListUserAddressesResponse = zod.object({
+  "data": zod.array(zod.object({
+  "id": zod.number(),
+  "label": zod.string().nullish(),
+  "name": zod.string(),
+  "address1": zod.string(),
+  "address2": zod.string().nullish(),
+  "city": zod.string(),
+  "state": zod.string(),
+  "zip": zod.string(),
+  "country": zod.string(),
+  "isDefault": zod.boolean()
+}))
+})
+
+
+/**
+ * The request body is the raw image file. PNG, JPEG, WebP and GIF are accepted, up to 5MB; the stored type comes from the file's magic bytes, not from the Content-Type header.
+ * @summary Upload a product image
+ */
+export const AdminUploadProductImageParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const AdminUploadProductImageResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "active": zod.boolean(),
+  "category": zod.string().nullish(),
+  "imageKey": zod.string().nullish(),
+  "featured": zod.boolean().optional(),
+  "prices": zod.array(zod.object({
+  "id": zod.string(),
+  "unitAmount": zod.number(),
+  "currency": zod.string(),
+  "active": zod.boolean(),
+  "productId": zod.string()
+})).optional()
+})
+
+
+/**
+ * @summary Remove a product's image
+ */
+export const AdminRemoveProductImageParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const AdminRemoveProductImageResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "active": zod.boolean(),
+  "category": zod.string().nullish(),
+  "imageKey": zod.string().nullish(),
+  "featured": zod.boolean().optional(),
+  "prices": zod.array(zod.object({
+  "id": zod.string(),
+  "unitAmount": zod.number(),
+  "currency": zod.string(),
+  "active": zod.boolean(),
+  "productId": zod.string()
+})).optional()
+})
+
+
+/**
+ * @summary List active product categories
+ */
+export const ListCategoriesResponse = zod.object({
+  "data": zod.array(zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "imageKey": zod.string().nullish(),
+  "sortOrder": zod.number(),
+  "active": zod.boolean()
+}))
+})
+
+
+/**
+ * @summary List all categories, with product counts
+ */
+export const AdminListCategoriesResponse = zod.object({
+  "data": zod.array(zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "imageKey": zod.string().nullish(),
+  "sortOrder": zod.number(),
+  "active": zod.boolean(),
+  "productCount": zod.number()
+})),
+  "unmanaged": zod.array(zod.string()).describe('Slugs in use by products that have no category row yet.')
+})
+
+
+/**
+ * @summary Create a category
+ */
+export const AdminCreateCategoryBody = zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string().optional(),
+  "imageKey": zod.string().optional(),
+  "sortOrder": zod.number().optional()
+})
+
+
+/**
+ * @summary Update a category
+ */
+export const AdminUpdateCategoryParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const AdminUpdateCategoryBody = zod.object({
+  "slug": zod.string().optional().describe('Renaming the slug moves every product that referenced it.'),
+  "name": zod.string().optional(),
+  "description": zod.string().optional(),
+  "imageKey": zod.string().optional(),
+  "sortOrder": zod.number().optional(),
+  "active": zod.boolean().optional()
+})
+
+export const AdminUpdateCategoryResponse = zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "imageKey": zod.string().nullish(),
+  "sortOrder": zod.number(),
+  "active": zod.boolean()
+})
+
+
+/**
+ * @summary Delete a category and clear it from its products
+ */
+export const AdminDeleteCategoryParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const AdminDeleteCategoryResponse = zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "imageKey": zod.string().nullish(),
+  "sortOrder": zod.number(),
+  "active": zod.boolean()
 })
 
 

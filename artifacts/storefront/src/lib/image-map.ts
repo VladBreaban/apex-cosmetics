@@ -10,8 +10,36 @@ import lotion from "@assets/Apex-Lotion-Web_1781426371739.png";
 import hairCare from "@assets/Apex-Hair-Care-Web_1781426371739.png";
 import shampoo from "@assets/Apex-Shampoo-Web.png";
 import tallow from "@assets/Apex-Tallow-Web.png";
+import { apiUrl } from "./api-base";
 
-export function getProductImage(name: string): string {
+/**
+ * Keys minted by the media store: 32 hex characters plus an image extension.
+ *
+ * The check matters because the seeded catalog already stores a bundled asset
+ * *filename* in `image_key` (e.g. "Apex-Facial-Serum-Web_1781426371736.png").
+ * Those are not uploads and there is nothing behind them at /api/assets, so
+ * treating every non-empty key as an upload would break the product images on
+ * all twelve original products.
+ */
+const UPLOADED_KEY = /^[0-9a-f]{32}\.(png|jpg|webp|gif)$/;
+
+/**
+ * Picture for a product.
+ *
+ * Prefers an image uploaded through the admin panel, falling back to the
+ * name-matched bundled assets below.
+ */
+export function getProductImage(
+  name: string,
+  imageKey?: string | null,
+): string {
+  if (imageKey && UPLOADED_KEY.test(imageKey)) {
+    return apiUrl(`/api/assets/${imageKey}`);
+  }
+  return getBundledProductImage(name);
+}
+
+function getBundledProductImage(name: string): string {
   const n = name.toLowerCase();
   if (n.includes("facial serum")) return serum;
   if (n.includes("cleanser")) return cleanser;

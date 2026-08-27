@@ -6,12 +6,18 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './adminCategory';
+export * from './adminCategoryListResponse';
 export * from './adminListOrdersParams';
 export * from './adminListPricesParams';
 export * from './adminListProductsParams';
 export * from './adminListUsersParams';
 export * from './adminStats';
 export * from './cartItem';
+export * from './category';
+export * from './categoryInput';
+export * from './categoryListResponse';
+export * from './categoryUpdate';
 export * from './checkoutInput';
 export * from './checkoutResponse';
 export * from './customer';
@@ -46,6 +52,7 @@ export * from './savedAddress';
 export * from './savedAddressInput';
 export * from './savedAddressListResponse';
 export * from './savedAddressUpdate';
+export * from './setPasswordInput';
 export * from './shippingAddress';
 export * from './shippingRate';
 export * from './shippingRatesRequest';
@@ -53,3 +60,5 @@ export * from './shippingRatesResponse';
 export * from './updateMeInput';
 export * from './user';
 export * from './userListResponse';
+export * from './userUpdate';
+export * from './userUpdateRole';

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Package, ShoppingCart, Users, Tag, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Users, Tag, Tags, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 const navItems = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard },
   { title: "Products", href: "/products", icon: Package },
+  { title: "Categories", href: "/categories", icon: Tags },
   { title: "Orders", href: "/orders", icon: ShoppingCart },
   { title: "Discounts", href: "/discounts", icon: Tag },
   { title: "Customers", href: "/users", icon: Users },

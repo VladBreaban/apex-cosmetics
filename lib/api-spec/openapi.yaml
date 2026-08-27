@@ -20,6 +20,8 @@ tags:
     description: Customer accounts
   - name: admin
     description: Admin operations
+  - name: categories
+    description: Product categories
 
 paths:
   /healthz:
@@ -720,6 +722,322 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: adminUpdateUser
+      tags: [admin]
+      summary: Update a customer record
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/users/{id}/password:
+    post:
+      operationId: adminSetUserPassword
+      tags: [admin]
+      summary: Set a customer's password
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetPasswordInput"
+      responses:
+        "204":
+          description: Password set
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/users/{id}/orders:
+    get:
+      operationId: adminListUserOrders
+      tags: [admin]
+      summary: List a customer's orders
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: Orders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderListResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/users/{id}/addresses:
+    get:
+      operationId: adminListUserAddresses
+      tags: [admin]
+      summary: List a customer's saved addresses
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: Saved addresses
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedAddressListResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/products/{id}/image:
+    post:
+      operationId: adminUploadProductImage
+      tags: [admin]
+      summary: Upload a product image
+      description: >-
+        The request body is the raw image file. PNG, JPEG, WebP and GIF are
+        accepted, up to 5MB; the stored type comes from the file's magic bytes,
+        not from the Content-Type header.
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: Product with the new image
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "400":
+          description: Not a supported image
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "413":
+          description: Image too large
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: adminRemoveProductImage
+      tags: [admin]
+      summary: Remove a product's image
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: Product without an image
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List active product categories
+      responses:
+        "200":
+          description: Categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoryListResponse"
+
+  /admin/categories:
+    get:
+      operationId: adminListCategories
+      tags: [admin]
+      summary: List all categories, with product counts
+      responses:
+        "200":
+          description: Categories
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminCategoryListResponse"
+    post:
+      operationId: adminCreateCategory
+      tags: [admin]
+      summary: Create a category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "201":
+          description: Created category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Slug already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/categories/{slug}:
+    patch:
+      operationId: adminUpdateCategory
+      tags: [admin]
+      summary: Update a category
+      parameters:
+        - in: path
+          name: slug
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryUpdate"
+      responses:
+        "200":
+          description: Updated category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Slug already in use
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: adminDeleteCategory
+      tags: [admin]
+      summary: Delete a category and clear it from its products
+      parameters:
+        - in: path
+          name: slug
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: Deleted category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /discounts/validate:
     post:
@@ -1277,6 +1595,8 @@ components:
           type: string
         name:
           type: ["string", "null"]
+        role:
+          type: string
         stripeCustomerId:
           type: ["string", "null"]
         totalOrders:
@@ -1296,6 +1616,116 @@ components:
             $ref: "#/components/schemas/User"
         total:
           type: integer
+
+    UserUpdate:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+        email:
+          type: string
+        role:
+          type: string
+          enum: [customer, admin]
+
+    SetPasswordInput:
+      type: object
+      required: [password]
+      properties:
+        password:
+          type: string
+          minLength: 8
+
+    Category:
+      type: object
+      required: [slug, name, sortOrder, active]
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        imageKey:
+          type: ["string", "null"]
+        sortOrder:
+          type: integer
+        active:
+          type: boolean
+
+    AdminCategory:
+      type: object
+      required: [slug, name, sortOrder, active, productCount]
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        imageKey:
+          type: ["string", "null"]
+        sortOrder:
+          type: integer
+        active:
+          type: boolean
+        productCount:
+          type: integer
+
+    CategoryListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Category"
+
+    AdminCategoryListResponse:
+      type: object
+      required: [data, unmanaged]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminCategory"
+        unmanaged:
+          description: Slugs in use by products that have no category row yet.
+          type: array
+          items:
+            type: string
+
+    CategoryInput:
+      type: object
+      required: [slug, name]
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        imageKey:
+          type: string
+        sortOrder:
+          type: integer
+
+    CategoryUpdate:
+      type: object
+      properties:
+        slug:
+          description: Renaming the slug moves every product that referenced it.
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        imageKey:
+          type: string
+        sortOrder:
+          type: integer
+        active:
+          type: boolean
 
     ShippingAddress:
       type: object

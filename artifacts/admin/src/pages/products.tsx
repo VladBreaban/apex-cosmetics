@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Link } from "wouter";
-import { useAdminListProducts, useAdminCreateProduct, useAdminUpdateProduct, useAdminDeactivateProduct, getAdminListProductsQueryKey } from "@workspace/api-client-react";
+import { useAdminListProducts, useAdminCreateProduct, useAdminUpdateProduct, useAdminDeactivateProduct, useAdminRemoveProductImage, useAdminListCategories, getAdminListProductsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -13,9 +13,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MoreHorizontal, Plus, Edit, Trash2, DollarSign, Package } from "lucide-react";
+import { MoreHorizontal, Plus, DollarSign, Package, ImagePlus, ImageOff, Loader2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { assetUrl, isUploadedImage, uploadProductImage } from "@/lib/media";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 export default function Products() {
@@ -26,16 +27,24 @@ export default function Products() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  const { data: categoryData } = useAdminListCategories();
+  const categories = categoryData?.data ?? [];
+
   const createProduct = useAdminCreateProduct();
   const updateProduct = useAdminUpdateProduct();
   const deactivateProduct = useAdminDeactivateProduct();
+  const removeImage = useAdminRemoveProductImage();
+
+  // One hidden file input, retargeted at whichever product's upload button was
+  // clicked — simpler than rendering an input per row.
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadTarget, setUploadTarget] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     unitAmount: "",
     category: "",
-    imageKey: "",
     featured: false
   });
 
@@ -46,18 +55,51 @@ export default function Products() {
         data: {
           name: formData.name,
           description: formData.description,
-          unitAmount: parseInt(formData.unitAmount) * 100, // Handle dollars to cents
-          category: formData.category,
-          imageKey: formData.imageKey,
+          // parseFloat, not parseInt: "68.50" must not become 6800 cents' worth
+          // of $68.00.
+          unitAmount: Math.round(parseFloat(formData.unitAmount) * 100),
+          category: formData.category || undefined,
           featured: formData.featured
         }
       });
       toast({ title: "Product created successfully" });
       setIsCreateOpen(false);
       queryClient.invalidateQueries({ queryKey: getAdminListProductsQueryKey() });
-      setFormData({ name: "", description: "", unitAmount: "", category: "", imageKey: "", featured: false });
+      setFormData({ name: "", description: "", unitAmount: "", category: "", featured: false });
     } catch (error) {
       toast({ title: "Error creating product", variant: "destructive" });
+    }
+  };
+
+  const handleFileChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const productId = uploadTarget;
+    // Reset immediately so choosing the same file twice still fires a change.
+    e.target.value = "";
+    if (!file || !productId) return;
+
+    try {
+      await uploadProductImage(productId, file);
+      queryClient.invalidateQueries({ queryKey: getAdminListProductsQueryKey() });
+      toast({ title: "Image uploaded" });
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : undefined,
+        variant: "destructive",
+      });
+    } finally {
+      setUploadTarget(null);
+    }
+  };
+
+  const handleRemoveImage = async (id: string) => {
+    try {
+      await removeImage.mutateAsync({ id });
+      queryClient.invalidateQueries({ queryKey: getAdminListProductsQueryKey() });
+      toast({ title: "Image removed" });
+    } catch (error) {
+      toast({ title: "Could not remove image", variant: "destructive" });
     }
   };
 
@@ -93,6 +135,14 @@ export default function Products() {
 
   return (
     <div className="space-y-6 animate-in fade-in-50 duration-500">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        className="hidden"
+        onChange={handleFileChosen}
+      />
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Products</h1>
@@ -128,21 +178,26 @@ export default function Products() {
                     <Label htmlFor="category">Category</Label>
                     <Select value={formData.category} onValueChange={v => setFormData({...formData, category: v})}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
+                        <SelectValue placeholder={categories.length ? "Select category" : "No categories yet"} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="supplements">Supplements</SelectItem>
-                        <SelectItem value="equipment">Equipment</SelectItem>
-                        <SelectItem value="apparel">Apparel</SelectItem>
-                        <SelectItem value="digital">Digital</SelectItem>
+                        {categories.map((category) => (
+                          <SelectItem key={category.slug} value={category.slug}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
+                    {categories.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Add one under <Link href="/categories" className="underline">Categories</Link>.
+                      </p>
+                    )}
                   </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="imageKey">Image Key / URL</Label>
-                  <Input id="imageKey" value={formData.imageKey} onChange={e => setFormData({...formData, imageKey: e.target.value})} />
-                </div>
+                <p className="text-xs text-muted-foreground">
+                  Add an image from the product list once the product exists.
+                </p>
                 <div className="flex items-center space-x-2">
                   <Switch id="featured" checked={formData.featured} onCheckedChange={c => setFormData({...formData, featured: c})} />
                   <Label htmlFor="featured">Featured Product</Label>
@@ -174,19 +229,43 @@ export default function Products() {
             {products.map((product) => (
               <TableRow key={product.id}>
                 <TableCell>
-                  <div className="h-10 w-10 rounded bg-muted flex items-center justify-center overflow-hidden">
-                    {product.imageKey ? (
-                      <img src={`/assets/${product.imageKey}`} alt={product.name} className="h-full w-full object-cover" />
+                  <button
+                    type="button"
+                    title={product.imageKey ? "Replace image" : "Upload image"}
+                    onClick={() => {
+                      setUploadTarget(product.id);
+                      fileInputRef.current?.click();
+                    }}
+                    className="group relative h-10 w-10 rounded bg-muted flex items-center justify-center overflow-hidden hover:ring-2 hover:ring-ring"
+                  >
+                    {uploadTarget === product.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    ) : isUploadedImage(product.imageKey) ? (
+                      <>
+                        <img src={assetUrl(product.imageKey)} alt={product.name} className="h-full w-full object-cover" />
+                        <span className="absolute inset-0 hidden items-center justify-center bg-black/50 group-hover:flex">
+                          <ImagePlus className="h-4 w-4 text-white" />
+                        </span>
+                      </>
                     ) : (
-                      <Package className="h-5 w-5 text-muted-foreground" />
+                      <>
+                        <Package className="h-5 w-5 text-muted-foreground group-hover:hidden" />
+                        <ImagePlus className="hidden h-4 w-4 text-muted-foreground group-hover:block" />
+                      </>
                     )}
-                  </div>
+                  </button>
                 </TableCell>
                 <TableCell>
                   <div className="font-medium">{product.name}</div>
                   <div className="text-xs text-muted-foreground truncate max-w-[200px]">{product.id}</div>
                 </TableCell>
-                <TableCell className="capitalize">{product.category || "Uncategorized"}</TableCell>
+                <TableCell>
+                  {product.category
+                    ? categories.find(c => c.slug === product.category)?.name ?? (
+                        <span title="No category row for this slug">{product.category}</span>
+                      )
+                    : <span className="text-muted-foreground">Uncategorized</span>}
+                </TableCell>
                 <TableCell>
                   {product.prices && product.prices.length > 0 
                     ? formatCurrency(product.prices[0].unitAmount) 
@@ -215,6 +294,20 @@ export default function Products() {
                           <DollarSign className="mr-2 h-4 w-4" /> Manage Prices
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setUploadTarget(product.id);
+                          fileInputRef.current?.click();
+                        }}
+                      >
+                        <ImagePlus className="mr-2 h-4 w-4" />
+                        {product.imageKey ? "Replace Image" : "Upload Image"}
+                      </DropdownMenuItem>
+                      {product.imageKey && (
+                        <DropdownMenuItem onClick={() => handleRemoveImage(product.id)}>
+                          <ImageOff className="mr-2 h-4 w-4" /> Remove Image
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleToggleActive(product.id, product.active)}>
                         {product.active ? "Deactivate Product" : "Activate Product"}

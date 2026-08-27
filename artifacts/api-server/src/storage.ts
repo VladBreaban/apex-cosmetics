@@ -2,6 +2,7 @@ import { db } from "@workspace/db";
 import {
   usersTable,
   ordersTable,
+  categoriesTable,
   orderItemsTable,
   discountRedemptionsTable,
   addressesTable,
@@ -46,6 +47,40 @@ function toProductDto(row: ProductRow, prices: PriceRow[]) {
     imageKey: row.imageKey ?? null,
     featured: row.featured,
     prices: prices.map(toPriceDto),
+  };
+}
+
+type UserRow = typeof usersTable.$inferSelect;
+
+/**
+ * The wire shape for a customer.
+ *
+ * Built by picking fields rather than spreading the row: spreading sent
+ * `passwordHash` — the customer's scrypt hash — to the admin SPA on every user
+ * list and detail request. Nothing outside this file should ever see it.
+ */
+function toUserDto(row: UserRow) {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name ?? null,
+    role: row.role,
+    stripeCustomerId: row.stripeCustomerId ?? null,
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+type CategoryRow = typeof categoriesTable.$inferSelect;
+
+/** The wire shape the API and both SPAs expect for a category. */
+function toCategoryDto(row: CategoryRow) {
+  return {
+    slug: row.slug,
+    name: row.name,
+    description: row.description ?? null,
+    imageKey: row.imageKey ?? null,
+    sortOrder: row.sortOrder,
+    active: row.active,
   };
 }
 
@@ -266,6 +301,155 @@ export class Storage {
     return row ? toPriceDto(row) : null;
   }
 
+  // Categories — the canonical list behind the free-text `products.category`
+  // slug. See lib/db/src/schema/categories.ts for why it is not a foreign key.
+  async listCategories(opts: { activeOnly?: boolean } = {}) {
+    const rows = await db
+      .select()
+      .from(categoriesTable)
+      .where(opts.activeOnly ? eq(categoriesTable.active, true) : undefined)
+      .orderBy(asc(categoriesTable.sortOrder), asc(categoriesTable.name));
+
+    // The product count is what makes the admin list useful — it is the only
+    // way to see that deactivating a category would orphan live products.
+    const counts = await db
+      .select({
+        category: productsTable.category,
+        productCount: count(productsTable.id),
+      })
+      .from(productsTable)
+      .groupBy(productsTable.category);
+
+    const countBySlug = new Map(
+      counts.map((c) => [c.category ?? "", Number(c.productCount)]),
+    );
+
+    return {
+      data: rows.map((row) => ({
+        ...toCategoryDto(row),
+        productCount: countBySlug.get(row.slug) ?? 0,
+      })),
+    };
+  }
+
+  async getCategory(slug: string) {
+    const [row] = await db
+      .select()
+      .from(categoriesTable)
+      .where(eq(categoriesTable.slug, slug));
+    return row ? toCategoryDto(row) : null;
+  }
+
+  async createCategory(input: {
+    slug: string;
+    name: string;
+    description?: string | null;
+    imageKey?: string | null;
+    sortOrder?: number;
+  }) {
+    const [row] = await db
+      .insert(categoriesTable)
+      .values({
+        slug: input.slug,
+        name: input.name,
+        description: input.description ?? null,
+        imageKey: input.imageKey ?? null,
+        sortOrder: input.sortOrder ?? 0,
+        active: true,
+      })
+      .returning();
+    return toCategoryDto(row);
+  }
+
+  async updateCategory(
+    slug: string,
+    patch: {
+      name?: string;
+      description?: string | null;
+      imageKey?: string | null;
+      sortOrder?: number;
+      active?: boolean;
+    },
+  ) {
+    const values: Record<string, unknown> = { updatedAt: new Date() };
+    if (patch.name !== undefined) values.name = patch.name;
+    if (patch.description !== undefined) values.description = patch.description;
+    if (patch.imageKey !== undefined) values.imageKey = patch.imageKey;
+    if (patch.sortOrder !== undefined) values.sortOrder = patch.sortOrder;
+    if (patch.active !== undefined) values.active = patch.active;
+
+    const [row] = await db
+      .update(categoriesTable)
+      .set(values)
+      .where(eq(categoriesTable.slug, slug))
+      .returning();
+    return row ? toCategoryDto(row) : null;
+  }
+
+  /**
+   * Change a category's slug, moving every product that referenced it in the
+   * same transaction. Split into two statements rather than an ON UPDATE
+   * CASCADE because `products.category` is not a foreign key.
+   */
+  async renameCategorySlug(fromSlug: string, toSlug: string) {
+    return db.transaction(async (tx) => {
+      const [row] = await tx
+        .update(categoriesTable)
+        .set({ slug: toSlug, updatedAt: new Date() })
+        .where(eq(categoriesTable.slug, fromSlug))
+        .returning();
+      if (!row) return null;
+
+      await tx
+        .update(productsTable)
+        .set({ category: toSlug, updatedAt: new Date() })
+        .where(eq(productsTable.category, fromSlug));
+
+      return toCategoryDto(row);
+    });
+  }
+
+  /**
+   * Remove a category and clear the slug from any product still on it, so no
+   * product is left pointing at a category that no longer exists.
+   */
+  async deleteCategory(slug: string) {
+    return db.transaction(async (tx) => {
+      const [row] = await tx
+        .delete(categoriesTable)
+        .where(eq(categoriesTable.slug, slug))
+        .returning();
+      if (!row) return null;
+
+      await tx
+        .update(productsTable)
+        .set({ category: null, updatedAt: new Date() })
+        .where(eq(productsTable.category, slug));
+
+      return toCategoryDto(row);
+    });
+  }
+
+  /**
+   * Slugs used by products but absent from `categories` — values that predate
+   * this table. The admin offers these for adoption rather than silently
+   * dropping them.
+   */
+  async listUnmanagedCategorySlugs() {
+    const rows = await db
+      .selectDistinct({ category: productsTable.category })
+      .from(productsTable);
+
+    const managed = await db
+      .select({ slug: categoriesTable.slug })
+      .from(categoriesTable);
+    const managedSet = new Set(managed.map((m) => m.slug));
+
+    return rows
+      .map((r) => r.category)
+      .filter((c): c is string => Boolean(c) && !managedSet.has(c!));
+  }
+
   // Orders
   async getOrder(id: number) {
     const [order] = await db
@@ -456,10 +640,9 @@ export class Storage {
           .where(eq(ordersTable.customerEmail, user.email));
 
         return {
-          ...user,
+          ...toUserDto(user),
           totalOrders: Number(stats?.totalOrders ?? 0),
           totalSpent: Number(stats?.totalSpent ?? 0),
-          createdAt: user.createdAt.toISOString(),
         };
       }),
     );
@@ -480,10 +663,9 @@ export class Storage {
       .where(eq(ordersTable.customerEmail, user.email));
 
     return {
-      ...user,
+      ...toUserDto(user),
       totalOrders: Number(stats?.totalOrders ?? 0),
       totalSpent: Number(stats?.totalSpent ?? 0),
-      createdAt: user.createdAt.toISOString(),
     };
   }
 
@@ -494,6 +676,58 @@ export class Storage {
       .where(eq(usersTable.id, id))
       .returning();
     return user ?? null;
+  }
+
+  /**
+   * Admin edit of a customer record.
+   *
+   * Changing the email is the delicate part: orders and discount redemptions
+   * are keyed by `customer_email`, not by user id — a guest checkout creates an
+   * order row with no user attached. Rewriting the user row alone would strand
+   * their order history under the old address and reset their once-per-customer
+   * discount eligibility, so all three tables move together in one transaction.
+   */
+  async updateUser(
+    id: string,
+    patch: { name?: string | null; email?: string; role?: string },
+  ) {
+    return db.transaction(async (tx) => {
+      const [existing] = await tx
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.id, id));
+      if (!existing) return null;
+
+      const values: Record<string, unknown> = {};
+      if (patch.name !== undefined) values.name = patch.name;
+      if (patch.role !== undefined) values.role = patch.role;
+
+      const emailChanged =
+        patch.email !== undefined && patch.email !== existing.email;
+      if (emailChanged) values.email = patch.email;
+
+      if (Object.keys(values).length === 0) return existing;
+
+      const [user] = await tx
+        .update(usersTable)
+        .set(values)
+        .where(eq(usersTable.id, id))
+        .returning();
+
+      if (emailChanged) {
+        await tx
+          .update(ordersTable)
+          .set({ customerEmail: patch.email! })
+          .where(eq(ordersTable.customerEmail, existing.email));
+
+        await tx
+          .update(discountRedemptionsTable)
+          .set({ email: patch.email! })
+          .where(eq(discountRedemptionsTable.email, existing.email));
+      }
+
+      return user ?? null;
+    });
   }
 
   // Saved addresses (scoped per user)

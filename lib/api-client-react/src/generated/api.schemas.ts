@@ -348,6 +348,7 @@ export interface User {
   email: string;
   /** @nullable */
   name?: string | null;
+  role?: string;
   /** @nullable */
   stripeCustomerId?: string | null;
   totalOrders?: number;
@@ -358,6 +359,77 @@ export interface User {
 export interface UserListResponse {
   data: User[];
   total: number;
+}
+
+export type UserUpdateRole = typeof UserUpdateRole[keyof typeof UserUpdateRole];
+
+
+export const UserUpdateRole = {
+  customer: 'customer',
+  admin: 'admin',
+} as const;
+
+export interface UserUpdate {
+  /** @nullable */
+  name?: string | null;
+  email?: string;
+  role?: UserUpdateRole;
+}
+
+export interface SetPasswordInput {
+  /** @minLength 8 */
+  password: string;
+}
+
+export interface Category {
+  slug: string;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  imageKey?: string | null;
+  sortOrder: number;
+  active: boolean;
+}
+
+export interface AdminCategory {
+  slug: string;
+  name: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  imageKey?: string | null;
+  sortOrder: number;
+  active: boolean;
+  productCount: number;
+}
+
+export interface CategoryListResponse {
+  data: Category[];
+}
+
+export interface AdminCategoryListResponse {
+  data: AdminCategory[];
+  /** Slugs in use by products that have no category row yet. */
+  unmanaged: string[];
+}
+
+export interface CategoryInput {
+  slug: string;
+  name: string;
+  description?: string;
+  imageKey?: string;
+  sortOrder?: number;
+}
+
+export interface CategoryUpdate {
+  /** Renaming the slug moves every product that referenced it. */
+  slug?: string;
+  name?: string;
+  description?: string;
+  imageKey?: string;
+  sortOrder?: number;
+  active?: boolean;
 }
 
 export interface ShippingAddress {

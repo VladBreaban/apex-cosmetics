@@ -89,10 +89,23 @@ CREATE TABLE "admin_users" (
 	CONSTRAINT "admin_users_username_unique" UNIQUE("username")
 );
 --> statement-breakpoint
+CREATE TABLE "categories" (
+	"slug" text PRIMARY KEY NOT NULL,
+	"name" text NOT NULL,
+	"description" text,
+	"image_key" text,
+	"sort_order" integer DEFAULT 0 NOT NULL,
+	"active" boolean DEFAULT true NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 ALTER TABLE "prices" ADD CONSTRAINT "prices_product_id_products_id_fk" FOREIGN KEY ("product_id") REFERENCES "public"."products"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "prices_product_idx" ON "prices" USING btree ("product_id");--> statement-breakpoint
 CREATE INDEX "prices_active_idx" ON "prices" USING btree ("active");--> statement-breakpoint
 CREATE INDEX "products_active_idx" ON "products" USING btree ("active");--> statement-breakpoint
 CREATE INDEX "products_category_idx" ON "products" USING btree ("category");--> statement-breakpoint
 CREATE INDEX "products_featured_idx" ON "products" USING btree ("featured");--> statement-breakpoint
-CREATE UNIQUE INDEX "discount_redemptions_promo_email_uq" ON "discount_redemptions" USING btree ("promotion_code_id","email");
+CREATE UNIQUE INDEX "discount_redemptions_promo_email_uq" ON "discount_redemptions" USING btree ("promotion_code_id","email");--> statement-breakpoint
+CREATE INDEX "categories_active_idx" ON "categories" USING btree ("active");--> statement-breakpoint
+CREATE INDEX "categories_sort_idx" ON "categories" USING btree ("sort_order");

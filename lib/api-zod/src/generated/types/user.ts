@@ -11,6 +11,7 @@ export interface User {
   email: string;
   /** @nullable */
   name?: string | null;
+  role?: string;
   /** @nullable */
   stripeCustomerId?: string | null;
   totalOrders?: number;

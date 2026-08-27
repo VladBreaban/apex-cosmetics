@@ -110,7 +110,7 @@ export default function ProductDetail() {
               className="absolute inset-0 w-full h-full object-cover opacity-70 transition-opacity duration-700 group-hover:opacity-90"
             />
             <motion.img 
-              src={getProductImage(product.name)} 
+              src={getProductImage(product.name, product.imageKey)} 
               alt={product.name} 
               className="w-full h-full object-contain relative z-10 mix-blend-multiply drop-shadow-xl" 
               whileHover={{ scale: 1.05 }}

@@ -15,6 +15,7 @@ import LoginPage from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import Products from "@/pages/products";
 import ProductPrices from "@/pages/product-prices";
+import Categories from "@/pages/categories";
 import Orders from "@/pages/orders";
 import OrderDetail from "@/pages/order-detail";
 import Discounts from "@/pages/discounts";
@@ -39,6 +40,7 @@ function AdminRoutes() {
         <Route path="/" component={Dashboard} />
         <Route path="/products" component={Products} />
         <Route path="/products/:id/prices" component={ProductPrices} />
+        <Route path="/categories" component={Categories} />
         <Route path="/orders" component={Orders} />
         <Route path="/orders/:id" component={OrderDetail} />
         <Route path="/discounts" component={Discounts} />

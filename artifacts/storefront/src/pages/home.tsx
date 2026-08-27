@@ -233,7 +233,7 @@ export default function Home() {
                   <Link href={`/products/${product.id}`} className="block relative bg-white overflow-hidden aspect-[3/4] mb-8 shadow-sm border border-border/60 rounded-sm group-hover:shadow-xl transition-all duration-700">
                     <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-10 pointer-events-none" />
                     <img 
-                      src={getProductImage(product.name)} 
+                      src={getProductImage(product.name, product.imageKey)} 
                       alt={product.name} 
                       className="w-full h-full object-contain p-12 transform group-hover:scale-110 transition-transform duration-1000 ease-[0.16,1,0.3,1] relative mix-blend-multiply" 
                     />

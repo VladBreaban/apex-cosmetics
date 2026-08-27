@@ -149,7 +149,7 @@ export default function Products() {
                         )}
                         <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-10 pointer-events-none" />
                         <img 
-                          src={getProductImage(product.name)} 
+                          src={getProductImage(product.name, product.imageKey)} 
                           alt={product.name} 
                           className="w-full h-full object-contain p-10 transform group-hover:scale-110 transition-transform duration-1000 ease-[0.16,1,0.3,1] relative mix-blend-multiply" 
                         />
