@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Clock, Send } from "lucide-react";
+import { Mail, MapPin, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -17,21 +17,9 @@ const contactDetails = [
     href: `mailto:${SUPPORT_EMAIL}`,
   },
   {
-    icon: Phone,
-    label: "Phone",
-    value: "+1 (800) 555-0142",
-    href: "tel:+18005550142",
-  },
-  {
     icon: MapPin,
-    label: "Laboratory",
-    value: "1 Peptide Way, San Francisco, CA 94107",
-    href: null,
-  },
-  {
-    icon: Clock,
-    label: "Hours",
-    value: "Mon–Fri · 9am – 6pm PT",
+    label: "Warehouse",
+    value: "503 Prosperity Way, North Sioux City, SD 57049",
     href: null,
   },
 ];

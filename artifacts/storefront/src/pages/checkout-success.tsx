@@ -31,7 +31,7 @@ export default function CheckoutSuccess() {
         </h1>
         
         <p className="text-muted-foreground text-lg mb-12 font-light leading-relaxed max-w-lg mx-auto">
-          Your allocation has been secured. Our laboratory is preparing your clinical-grade formulations for priority dispatch.
+          Your allocation has been secured. Our team is preparing your formulations for priority dispatch.
         </p>
         
         <Link href="/products" className="inline-flex items-center justify-center px-10 py-5 bg-foreground text-background text-sm font-bold uppercase tracking-widest hover:bg-primary transition-colors duration-500 rounded-sm shadow-xl shadow-foreground/5">
