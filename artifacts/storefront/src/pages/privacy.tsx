@@ -6,7 +6,7 @@ export default function Privacy() {
       eyebrow="Legal"
       title="Privacy Policy"
       updated="June 2026"
-      intro="Apex Health Laboratories ('Apex Health', 'we', 'us') respects your privacy. This policy explains what information we collect when you visit our store or place an order, how we use it, and the choices you have."
+      intro="Apex Health ('we', 'us') respects your privacy. This policy explains what information we collect when you visit our store or place an order, how we use it, and the choices you have."
       sections={[
         {
           heading: "Information we collect",

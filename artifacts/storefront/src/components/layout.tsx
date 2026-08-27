@@ -241,13 +241,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="pt-8 border-t border-border text-[11px] text-muted-foreground flex flex-col md:flex-row justify-between items-center gap-4 font-light tracking-[0.1em] uppercase">
-            <p>&copy; {new Date().getFullYear()} Apex Health Laboratories.</p>
-            <a
-              href="mailto:hello@apex-cosmetics.com"
-              className="hover:text-foreground transition-colors normal-case tracking-normal"
-            >
-              hello@apex-cosmetics.com
-            </a>
+            <p>&copy; {new Date().getFullYear()} Apex Health.</p>
           </div>
         </div>
       </footer>

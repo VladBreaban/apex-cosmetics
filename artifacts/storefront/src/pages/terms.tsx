@@ -6,7 +6,7 @@ export default function Terms() {
       eyebrow="Legal"
       title="Terms of Service"
       updated="June 2026"
-      intro="These terms govern your use of the Apex Health Laboratories store and the purchase of our products. By placing an order you agree to the terms below."
+      intro="These terms govern your use of the Apex Health store and the purchase of our products. By placing an order you agree to the terms below."
       sections={[
         {
           heading: "Orders & pricing",
@@ -43,7 +43,7 @@ export default function Terms() {
         {
           heading: "Limitation of liability",
           body: [
-            "To the fullest extent permitted by law, Apex Health Laboratories is not liable for any indirect or consequential damages arising from the use of our products or website.",
+            "To the fullest extent permitted by law, Apex Health is not liable for any indirect or consequential damages arising from the use of our products or website.",
           ],
         },
         {
