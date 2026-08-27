@@ -17,7 +17,9 @@ on:
 #   DEPLOY_API=true        once the App Service + its publish profile exist
 #   DEPLOY_FRONTEND=true   once the Static Web App + its token exist
 #   API_BASE_URL           the API origin the SPAs should call, e.g.
-#                          https://apex-cosmetics-prod-api-xxxx.centralus-01.azurewebsites.net
+#                          https://api.apex-cosmetics.com
+#                          May be a variable or a secret; the frontend job reads
+#                          both and fails fast when neither is set.
 # Until then, deploy on demand with "Run workflow" and pick a target.
 
 env:
@@ -66,12 +68,33 @@ jobs:
       - name: Build workspace libs
         run: pnpm run typecheck:libs
 
+      # An unset API_BASE_URL builds a bundle that calls /api on the Static Web
+      # App, which serves index.html for it — the SPA then parses HTML as JSON
+      # and renders an empty catalog. The run goes green, so check it here.
+      - name: Require the API base URL
+        env:
+          API_BASE_URL: ${{ vars.API_BASE_URL || secrets.API_BASE_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${API_BASE_URL}" ]; then
+            echo "::error::API_BASE_URL is not set. Add it under Settings -> Secrets and variables -> Actions, as either a repository variable or a secret, e.g. https://api.apex-cosmetics.com"
+            exit 1
+          fi
+          case "${API_BASE_URL}" in
+            https://*) ;;
+            *) echo "::error::API_BASE_URL must be an absolute https:// origin"; exit 1 ;;
+          esac
+          case "${API_BASE_URL}" in
+            */) echo "::error::API_BASE_URL must not end with a trailing slash"; exit 1 ;;
+          esac
+          echo "API base URL is set and well-formed."
+
       - name: Build storefront
         env:
           NODE_ENV: production
           PORT: '5173'
           BASE_PATH: /
-          VITE_API_BASE_URL: ${{ vars.API_BASE_URL }}
+          VITE_API_BASE_URL: ${{ vars.API_BASE_URL || secrets.API_BASE_URL }}
         run: pnpm --filter @workspace/storefront run build
 
       - name: Build admin
@@ -79,7 +102,7 @@ jobs:
           NODE_ENV: production
           PORT: '5174'
           BASE_PATH: /admin/
-          VITE_API_BASE_URL: ${{ vars.API_BASE_URL }}
+          VITE_API_BASE_URL: ${{ vars.API_BASE_URL || secrets.API_BASE_URL }}
         run: pnpm --filter @workspace/admin run build
 
       - name: Nest admin bundle under /admin
